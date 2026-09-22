@@ -1,8 +1,9 @@
 import type { App } from '../app';
 import { env } from '../env';
+import { IrrifarmApiClient } from '../services/irrifarm-api.client';
 
-export function shouldRegisterIrrifarmTestPage(mode: string, explicitlyEnabled: boolean): boolean {
-	return mode !== 'prod' || explicitlyEnabled;
+export function shouldRegisterIrrifarmTestPage(_mode: string, explicitlyEnabled: boolean): boolean {
+	return explicitlyEnabled;
 }
 
 export const irrifarmTestPageRoutes = async (app: App) => {
@@ -13,15 +14,46 @@ export const irrifarmTestPageRoutes = async (app: App) => {
 			.header('X-Content-Type-Options', 'nosniff')
 			.header(
 				'Content-Security-Policy',
-				"default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'",
+				"default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'",
 			)
 			.type('text/html; charset=utf-8')
-			.send(renderIrrifarmSsoTestPage(env.IRRIFARM_AUTH_MODE, env.IRRIFARM_FIXTURE_USERNAME));
+			.send(renderIrrifarmSsoTestPage(env.IRRIFARM_AUTH_MODE));
+	});
+
+	app.post('/test', async (request, reply) => {
+		const username = env.IRRIFARM_TEST_USERNAME ?? env.IRRIFARM_FIXTURE_USERNAME;
+		if (!env.IRRIFARM_BASE_URL || !username || !env.IRRIFARM_TEST_PASSWORD) {
+			return reply.status(503).type('text/plain; charset=utf-8').send('Accesso demo non configurato.');
+		}
+
+		try {
+			const client = new IrrifarmApiClient({
+				baseUrl: env.IRRIFARM_BASE_URL,
+				timeoutMs: env.IRRIFARM_REQUEST_TIMEOUT_MS,
+			});
+			const token = await client.createAppToken(username, env.IRRIFARM_TEST_PASSWORD);
+			const { dispatchAuthRequest } = await import('./auth');
+			const response = await dispatchAuthRequest({
+				method: 'POST',
+				url: '/api/auth/sign-in/irrifarm',
+				headers: {
+					...request.headers,
+					'content-type': 'application/json',
+				},
+				body: { token, username },
+			});
+
+			reply.status(response.status);
+			response.headers.forEach((value, key) => reply.header(key, value));
+			return reply.send(response.body ? await response.text() : null);
+		} catch (error) {
+			request.log.error({ err: error }, 'Irrifarm demo sign-in failed');
+			return reply.status(502).type('text/plain; charset=utf-8').send('Accesso demo non riuscito. Riprova.');
+		}
 	});
 };
 
-export function renderIrrifarmSsoTestPage(mode: string, fixtureUsername?: string): string {
-	const username = escapeHtml(fixtureUsername ?? '');
+export function renderIrrifarmSsoTestPage(mode: string): string {
 	const authMode = escapeHtml(mode);
 
 	return `<!doctype html>
@@ -30,7 +62,7 @@ export function renderIrrifarmSsoTestPage(mode: string, fixtureUsername?: string
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta name="referrer" content="strict-origin" />
-		<title>Test Irrifarm → NAO</title>
+		<title>Test IrriAI</title>
 		<style>
 			:root { color-scheme: light dark; font-family: system-ui, sans-serif; }
 			body { margin: 0; padding: 2rem; background: #f4f7f5; color: #17221c; }
@@ -38,43 +70,20 @@ export function renderIrrifarmSsoTestPage(mode: string, fixtureUsername?: string
 			h1 { margin-top: 0; font-size: 1.5rem; }
 			p { line-height: 1.5; }
 			.mode { display: inline-block; padding: .2rem .55rem; border-radius: 999px; background: #e3f3e8; font-family: ui-monospace, monospace; }
-			label { display: block; margin-top: 1rem; font-weight: 650; }
-			input, textarea { box-sizing: border-box; width: 100%; margin-top: .4rem; padding: .7rem; border: 1px solid #aebdb4; border-radius: 6px; background: white; color: #17221c; font: inherit; }
-			textarea { min-height: 11rem; resize: vertical; font-family: ui-monospace, monospace; font-size: .8rem; }
 			button { margin-top: 1.25rem; padding: .75rem 1rem; border: 0; border-radius: 6px; background: #168548; color: white; font: inherit; font-weight: 700; cursor: pointer; }
 			.note { margin-bottom: 0; color: #536158; font-size: .9rem; }
 		</style>
 	</head>
 	<body>
 		<main>
-			<h1>Test accesso Irrifarm → NAO</h1>
+			<h1>Ambiente di collaudo IrriAI</h1>
 			<p>Modalità backend: <span class="mode">${authMode}</span></p>
-			<form method="post" action="/api/auth/sign-in/irrifarm" autocomplete="off">
-				<label for="username">Username Irrifarm</label>
-				<input id="username" name="username" value="${username}" required maxlength="255" />
-
-				<label for="token">JWT Irrifarm</label>
-				<textarea id="token" name="token" required maxlength="16384" spellcheck="false" autocomplete="off"></textarea>
-
-				<label for="regId">RegId <small>(necessario solo in modalità check-user)</small></label>
-				<input id="regId" name="regId" placeholder="UUID del dispositivo" autocomplete="off" />
-
-				<button type="submit">Entra in NAO</button>
+			<p>Accesso riservato al collaudo concordato. Le credenziali tecniche (Domenico) sono gestite dal server e non vengono inviate al browser.</p>
+			<form method="post" action="/api/auth/irrifarm/test">
+				<button type="submit">Accedi all'ambiente demo</button>
 			</form>
-			<p class="note">La pagina non richiede né memorizza la password Irrifarm. Il JWT viene inviato nel body POST e la risposta non viene salvata in cache.</p>
+			<p class="note">Il pulsante genera una sessione temporanea per l'account Irrifarm di test.</p>
 		</main>
-		<script>
-			const form = document.querySelector('form');
-			const token = document.querySelector('#token');
-			const usernameInput = document.querySelector('#username');
-			const regId = document.querySelector('#regId');
-			form.addEventListener('submit', () => {
-				token.value = token.value.trim();
-				usernameInput.value = usernameInput.value.trim();
-				regId.value = regId.value.trim();
-				if (!regId.value) regId.disabled = true;
-			});
-		</script>
 	</body>
 </html>`;
 }

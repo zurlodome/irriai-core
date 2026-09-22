@@ -105,6 +105,8 @@ const baseEnvSchema = z.object({
 		.optional()
 		.default('false')
 		.transform((val) => val === 'true'),
+	IRRIFARM_TEST_USERNAME: z.string().min(1).optional(),
+	IRRIFARM_TEST_PASSWORD: z.string().min(1).optional(),
 	IRRIFARM_LARGE_SCOPE_THRESHOLD: z.coerce.number().int().positive().default(50),
 	IRRIFARM_MAX_QUERY_ROWS: z.coerce.number().int().positive().max(10_000).default(500),
 	IRRIFARM_QUERY_TIMEOUT_MS: z.coerce.number().int().positive().max(300_000).default(30_000),

@@ -1,7 +1,39 @@
-import { App } from '../app';
+import type { IncomingHttpHeaders } from 'node:http';
+
+import type { App } from '../app';
 import { getAuth } from '../auth';
 import { normalizeAuthRequestPayload } from '../utils/auth-request';
 import { convertHeaders } from '../utils/utils';
+
+interface DispatchAuthRequestInput {
+	method: string;
+	url: string;
+	headers: IncomingHttpHeaders;
+	body: unknown;
+}
+
+export async function dispatchAuthRequest(input: DispatchAuthRequestInput): Promise<Response> {
+	const url = new URL(input.url, `http://${input.headers.host}`);
+	const headers = convertHeaders(input.headers);
+	headers.delete('content-length');
+	headers.delete('transfer-encoding');
+	const payload = normalizeAuthRequestPayload({
+		method: input.method,
+		url: input.url,
+		contentType: input.headers['content-type'],
+		body: input.body,
+	});
+	if (payload.contentType) {
+		headers.set('content-type', payload.contentType);
+	}
+	const request = new Request(url.toString(), {
+		method: input.method,
+		headers,
+		body: payload.body,
+	});
+	const auth = await getAuth();
+	return auth.handler(request);
+}
 
 export const authRoutes = async (app: App) => {
 	app.route({
@@ -9,28 +41,12 @@ export const authRoutes = async (app: App) => {
 		url: '/auth/*',
 		async handler(request, reply) {
 			try {
-				// Construct request URL
-				const url = new URL(request.url, `http://${request.headers.host}`);
-
-				const headers = convertHeaders(request.headers);
-				const payload = normalizeAuthRequestPayload({
+				const response = await dispatchAuthRequest({
 					method: request.method,
 					url: request.url,
-					contentType: request.headers['content-type'],
+					headers: request.headers,
 					body: request.body,
 				});
-				if (payload.contentType) {
-					headers.set('content-type', payload.contentType);
-				}
-				// Create Fetch API-compatible request
-				const req = new Request(url.toString(), {
-					method: request.method,
-					headers,
-					body: payload.body,
-				});
-				// Process authentication request
-				const auth = await getAuth();
-				const response = await auth.handler(req);
 				// Forward response to client
 				reply.status(response.status);
 				response.headers.forEach((value, key) => reply.header(key, value));
