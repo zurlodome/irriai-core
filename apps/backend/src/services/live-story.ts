@@ -207,6 +207,8 @@ export async function executeRawSql(
 			...(options.allowedMboSns !== null &&
 				options.allowedMboSns !== undefined && { allowed_mbo_sns: options.allowedMboSns }),
 		}),
+		...(options.allowedMboSns !== null &&
+			options.allowedMboSns !== undefined && { signal: AbortSignal.timeout(env.IRRIFARM_QUERY_TIMEOUT_MS) }),
 	});
 
 	if (!response.ok) {

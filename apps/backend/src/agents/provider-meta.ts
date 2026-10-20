@@ -262,6 +262,13 @@ const OLLAMA_SAMPLING: ModelCapabilities = { thinking: 'none', sampling: true, t
 
 const OPENAI_MODELS = [
 	{
+		id: 'gpt-6-luna',
+		name: 'GPT 6 Luna',
+		contextWindow: 1_050_000,
+		costPerM: { inputNoCache: 0.1, inputCacheRead: 0.01, inputCacheWrite: 0.125, output: 0.5 },
+		capabilities: OPENAI_5_6_REASONING,
+	},
+	{
 		id: 'gpt-5.6-sol',
 		name: 'GPT 5.6 Sol',
 		contextWindow: 1_050_000,
@@ -462,6 +469,13 @@ export const PROVIDER_META: ProviderMetaMap = {
 		extractorModelId: 'gpt-4.1-mini',
 		summaryModelId: 'gpt-4.1-mini',
 		models: [
+			{
+				id: 'gpt-6-luna',
+				name: 'GPT 6 Luna',
+				contextWindow: 1_050_000,
+				costPerM: { inputNoCache: 0.1, inputCacheRead: 0.01, inputCacheWrite: 0.125, output: 0.5 },
+				capabilities: OPENAI_5_6_REASONING,
+			},
 			{
 				id: 'gpt-5.6-sol',
 				name: 'GPT 5.6 Sol',

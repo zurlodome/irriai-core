@@ -20,7 +20,7 @@ describe('Irrifarm development test page', () => {
 		await app.close();
 	});
 
-	it('serves a non-cacheable one-click demo sign-in form', async () => {
+	it('serves a non-cacheable form with separate Domenico and Vincenzo sign-in buttons', async () => {
 		const response = await app.inject({ method: 'GET', url: '/api/auth/irrifarm/test' });
 
 		expect(response.statusCode).toBe(200);
@@ -28,10 +28,23 @@ describe('Irrifarm development test page', () => {
 		expect(response.headers['content-security-policy']).toContain("form-action 'self'");
 		expect(response.body).toContain('action="/api/auth/irrifarm/test"');
 		expect(response.body).toContain('name="referrer" content="strict-origin"');
-		expect(response.body).toContain("Accedi all'ambiente demo");
+		expect(response.body).toContain('name="account" value="domenico"');
+		expect(response.body).toContain('name="account" value="vincenzo"');
+		expect(response.body).toContain('Accedi come Domenico (singolo MBO)');
+		expect(response.body).toContain('Accedi come Vincenzo (tutti i controller)');
 		expect(response.body).not.toContain('name="token"');
 		expect(response.body).not.toContain('name="username"');
 		expect(response.body).not.toContain('name="password"');
+	});
+
+	it('rejects unrecognized demo accounts', async () => {
+		const response = await app.inject({
+			method: 'POST',
+			url: '/api/auth/irrifarm/test',
+			payload: { account: 'unknown' },
+		});
+
+		expect(response.statusCode).toBe(400);
 	});
 
 	it('escapes values rendered from configuration', () => {

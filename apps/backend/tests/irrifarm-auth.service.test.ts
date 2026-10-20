@@ -52,6 +52,24 @@ describe('IrrifarmAuthService', () => {
 		expect(mocks.getMotherBoardsByClient).not.toHaveBeenCalled();
 	});
 
+	it('resolves both configured fixtures with their own client scopes', async () => {
+		const service = new IrrifarmAuthService(mocks, {
+			mode: 'fixture',
+			fixture: { username: 'domenico', userId: 470, clientId: 204, clientLevel: 20 },
+			adminFixture: { username: 'vincenzo', userId: 605, clientId: 1, clientLevel: 1 },
+		});
+
+		await service.resolve({ token: createJwt({ sub: 'domenico' }), username: 'domenico' });
+		expect(mocks.getMotherBoardsByClient).toHaveBeenLastCalledWith(
+			expect.objectContaining({ userId: 470, clientId: 204, clientLevel: 20 }),
+		);
+
+		await service.resolve({ token: createJwt({ sub: 'vincenzo' }), username: 'vincenzo' });
+		expect(mocks.getMotherBoardsByClient).toHaveBeenLastCalledWith(
+			expect.objectContaining({ userId: 605, clientId: 1, clientLevel: 1 }),
+		);
+	});
+
 	it('uses CheckUser values in check-user mode', async () => {
 		const regId = '31da332d-9790-4f15-9765-ea9d05cd7b69';
 		mocks.checkUser.mockResolvedValue({

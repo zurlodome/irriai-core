@@ -5,6 +5,7 @@ import { z } from 'zod';
 
 import { MCP_SUB_AGENT_EXCLUDED_TOOLS } from '../../agents/tools';
 import * as chatQueries from '../../queries/chat.queries';
+import { getContextAssetVirtualPath } from '../../queries/context-asset.queries';
 import * as storyQueries from '../../queries/story.queries';
 import { agentService, defaultAgentToolsExcluding } from '../../services/agent';
 import { mcpService } from '../../services/mcp';
@@ -13,8 +14,10 @@ import type { UIMessage, UIMessagePart } from '../../types/chat';
 import { CHART_DATA_MODE_ASK_NAO_ADDENDUM, CHART_DATA_MODE_RESULT_NUDGE } from '../chart-data-mode';
 import type { McpContext, ToolResult } from '../logging';
 import { chatUrl } from '../urls';
+import { normalizeWikiAssetPaths, requireFinalAnswer, stripUnsupportedCitations } from './answer-quality';
 import { type AskNaoClarification, type AskNaoResult, askNaoRuns } from './ask-nao-runs';
 import { registerMcpTool } from './register-mcp-tool';
+import { createWikiImagePathResolver } from './wiki-image-path';
 
 type Agent = Awaited<ReturnType<typeof agentService.create>>;
 
@@ -149,7 +152,7 @@ export function registerSubAgentTools(server: McpServer, ctx: McpContext): void 
 				tools: defaultAgentToolsExcluding(MCP_SUB_AGENT_EXCLUDED_TOOLS),
 			});
 			askNaoRuns.start(chat.id);
-			const runPromise = runAskNaoInBackground(agent, uiMessages, chat.id, naoChatUrl);
+			const runPromise = runAskNaoInBackground(agent, uiMessages, chat.id, naoChatUrl, ctx.projectId);
 
 			const outcome = await waitForResultOrBudget(runPromise, ASK_NAO_SYNC_BUDGET_MS);
 			if (outcome.kind === 'error') {
@@ -209,18 +212,26 @@ async function runAskNaoInBackground(
 	uiMessages: UIMessage[],
 	chatId: string,
 	naoChatUrl: string,
+	projectId: string,
 ): Promise<AskNaoResult> {
 	try {
 		let answer = await drainStream(agent.stream(uiMessages));
 		if (!answer.text && !answer.clarification) {
 			answer = await extractAnswerFromChat(chatId);
 		}
+		requireFinalAnswer(answer.text, Boolean(answer.clarification));
+		const queries = agent.queryResultsSummary;
+		const text = await normalizeWikiAssetPaths(
+			stripUnsupportedCitations(answer.text, new Set(queries.map((query) => query.id))),
+			(id) => getContextAssetVirtualPath(projectId, id),
+			createWikiImagePathResolver(projectId),
+		);
 		const result: AskNaoResult = {
 			chatId,
 			chatUrl: naoChatUrl,
-			text: answer.text,
+			text,
 			...(answer.clarification ? { clarification: answer.clarification } : {}),
-			queries: agent.queryResultsSummary,
+			queries,
 			story_ids: await resolveStoryIds(agent.generatedArtifacts.stories, chatId),
 		};
 		askNaoRuns.complete(chatId, result);
@@ -271,11 +282,21 @@ async function resolveAnswerPayload(chatId: string, ctx: McpContext): Promise<To
  */
 async function reconstructAnswerFromDb(chatId: string, ctx: McpContext): Promise<ToolResult> {
 	const answer = await extractAnswerFromChat(chatId);
+	try {
+		requireFinalAnswer(answer.text, Boolean(answer.clarification));
+	} catch (error) {
+		return answerErrorPayload(chatId, error instanceof Error ? error.message : String(error));
+	}
+	const text = await normalizeWikiAssetPaths(
+		answer.text.includes('docs/wiki_irri_farm/') ? stripUnsupportedCitations(answer.text, new Set()) : answer.text,
+		(id) => getContextAssetVirtualPath(ctx.projectId, id),
+		createWikiImagePathResolver(ctx.projectId),
+	);
 	return answerCompletePayload(
 		{
 			chatId,
 			chatUrl: chatUrl(chatId),
-			text: answer.text,
+			text,
 			...(answer.clarification ? { clarification: answer.clarification } : {}),
 			queries: [],
 			story_ids: [],

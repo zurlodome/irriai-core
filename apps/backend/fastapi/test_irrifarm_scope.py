@@ -94,3 +94,107 @@ def test_query_guardrails_do_not_add_mysql_hint_to_other_dialects():
     assert "MAX_EXECUTION_TIME" not in guarded
     assert guarded.endswith("LIMIT 100")
     assert applied_limit == 100
+
+
+def test_query_guardrails_require_bounded_senshistory_period():
+    with pytest.raises(IrrifarmScopeError, match="both lower and upper"):
+        apply_irrifarm_query_guardrails(
+            "SELECT MBO_SN FROM senshistory WHERE SNS_DtEvent >= '2025-01-01'",
+            "mysql",
+            500,
+            30_000,
+        )
+
+
+def test_query_guardrails_reject_senshistory_period_over_366_days():
+    with pytest.raises(IrrifarmScopeError, match="more than 366 days"):
+        apply_irrifarm_query_guardrails(
+            """
+            SELECT MBO_SN
+            FROM senshistory
+            WHERE SNS_DtEvent >= '2024-01-01'
+              AND SNS_DtEvent < '2025-01-02'
+            """,
+            "mysql",
+            500,
+            30_000,
+        )
+
+
+def test_query_guardrails_allow_bounded_dynamic_senshistory_period():
+    guarded, applied_limit = apply_irrifarm_query_guardrails(
+        """
+        SELECT COUNT(*) AS readings_count
+        FROM senshistory
+        WHERE SNS_DtEvent >= CURRENT_DATE - INTERVAL 29 DAY
+          AND SNS_DtEvent < CURRENT_DATE + INTERVAL 1 DAY
+        """,
+        "mysql",
+        500,
+        30_000,
+    )
+
+    assert guarded.endswith("LIMIT 500")
+    assert applied_limit == 500
+
+
+def test_query_guardrails_reject_raw_senshistory_period_over_7_days():
+    with pytest.raises(IrrifarmScopeError, match="more than 7 days"):
+        apply_irrifarm_query_guardrails(
+            """
+            SELECT MBO_SN, SNS_DtEvent
+            FROM senshistory
+            WHERE SNS_DtEvent >= '2025-01-01'
+              AND SNS_DtEvent < '2025-01-09'
+            """,
+            "mysql",
+            500,
+            30_000,
+        )
+
+
+def test_query_guardrails_allow_raw_senshistory_period_of_7_days():
+    guarded, applied_limit = apply_irrifarm_query_guardrails(
+        """
+        SELECT MBO_SN, SNS_DtEvent
+        FROM senshistory
+        WHERE SNS_DtEvent >= '2025-01-01'
+          AND SNS_DtEvent < '2025-01-08'
+        """,
+        "mysql",
+        500,
+        30_000,
+    )
+
+    assert guarded.endswith("LIMIT 500")
+    assert applied_limit == 500
+
+
+def test_query_guardrails_reject_wide_dynamic_senshistory_period():
+    with pytest.raises(IrrifarmScopeError, match="more than 366 days"):
+        apply_irrifarm_query_guardrails(
+            """
+            SELECT COUNT(*) AS readings_count
+            FROM senshistory
+            WHERE SNS_DtEvent >= CURRENT_DATE - INTERVAL 500 DAY
+              AND SNS_DtEvent < CURRENT_DATE + INTERVAL 1 DAY
+            """,
+            "mysql",
+            500,
+            30_000,
+        )
+
+
+def test_query_guardrails_reject_disjunctive_senshistory_time_bounds():
+    with pytest.raises(IrrifarmScopeError, match="combined with AND"):
+        apply_irrifarm_query_guardrails(
+            """
+            SELECT MBO_SN
+            FROM senshistory
+            WHERE SNS_DtEvent >= '2025-01-01'
+               OR SNS_DtEvent < '2025-02-01'
+            """,
+            "mysql",
+            500,
+            30_000,
+        )

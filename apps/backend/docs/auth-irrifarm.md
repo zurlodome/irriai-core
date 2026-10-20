@@ -22,7 +22,7 @@ The Irrifarm backend obtains an Irrifarm app JWT and returns an auto-submitting 
 
 The endpoint validates the Irrifarm identity, fetches its authorized motherboards, creates or finds the linked nao user, sets the normal Better Auth session cookie, and redirects to `/`.
 
-Open `/api/auth/irrifarm/test` to use the temporary one-click test hand-off. The nao backend obtains the JWT from Irrifarm using server-side test credentials; neither the password nor the JWT is rendered in the browser. The page is disabled unless explicitly enabled.
+Open `/api/auth/irrifarm/test` to use the temporary test hand-off with separate Domenico and Vincenzo buttons. The nao backend obtains the JWT from Irrifarm using server-side test credentials; neither the password nor the JWT is rendered in the browser. The page is disabled unless explicitly enabled.
 
 To expose it temporarily in a test deployment running with `MODE=prod`, configure:
 
@@ -32,15 +32,16 @@ BETTER_AUTH_URL=https://nao.example.com
 IRRIFARM_TEST_PAGE_ENABLED=true
 IRRIFARM_TEST_USERNAME=domenico
 IRRIFARM_TEST_PASSWORD=<secret App Service or Key Vault reference>
+IRRIFARM_TEST_ADMIN_PASSWORD=<secret App Service or Key Vault reference>
 ```
 
-The page will be available at `https://nao.example.com/api/auth/irrifarm/test`. Restrict it to the agreed client IPs at the App Service layer. Set `IRRIFARM_TEST_PAGE_ENABLED=false` and remove the test credentials after testing. Never commit `IRRIFARM_TEST_PASSWORD` or expose it to browser code.
+The page will be available at `https://nao.example.com/api/auth/irrifarm/test`. Restrict it to the agreed client IPs at the App Service layer. Set `IRRIFARM_TEST_PAGE_ENABLED=false` and remove the test credentials after testing. Never commit the test passwords or expose them to browser code.
 
 The JWT, username, or IDs must not be placed in the URL. Configure the Irrifarm application origin in `IRRIFARM_APP_ORIGINS` so Better Auth can enforce its origin check.
 
 ## Validation modes
 
-`IRRIFARM_AUTH_MODE=fixture` is the temporary test path. It only accepts the configured fixture username. The JWT is still validated remotely by calling `GetMotherBoardsByClient`; only `CheckUser` is skipped.
+`IRRIFARM_AUTH_MODE=fixture` is the temporary test path. It accepts the configured Domenico fixture and, when supplied, the Vincenzo admin fixture. The JWT is still validated remotely by calling `GetMotherBoardsByClient` for the selected user; only `CheckUser` is skipped.
 
 ```env
 IRRIFARM_BASE_URL=https://app-irrifarm-service.example
@@ -49,6 +50,10 @@ IRRIFARM_FIXTURE_USERNAME=domenico
 IRRIFARM_FIXTURE_USER_ID=470
 IRRIFARM_FIXTURE_CLIENT_ID=204
 IRRIFARM_FIXTURE_CLIENT_LEVEL=20
+IRRIFARM_FIXTURE_ADMIN_USERNAME=vincenzo
+IRRIFARM_FIXTURE_ADMIN_USER_ID=605
+IRRIFARM_FIXTURE_ADMIN_CLIENT_ID=1
+IRRIFARM_FIXTURE_ADMIN_CLIENT_LEVEL=1
 ```
 
 `IRRIFARM_AUTH_MODE=check-user` is the final path. `regId` is mandatory and nao requires `CheckUser.active=true`. The returned values are mapped as follows:
@@ -98,12 +103,12 @@ Guardrails constrain query cost and response size without removing any authorize
 ```env
 IRRIFARM_LARGE_SCOPE_THRESHOLD=50
 IRRIFARM_MAX_QUERY_ROWS=500
-IRRIFARM_QUERY_TIMEOUT_MS=30000
+IRRIFARM_QUERY_TIMEOUT_MS=15000
 ```
 
 When the user has more MBOs than `IRRIFARM_LARGE_SCOPE_THRESHOLD`, the agent must start inventory requests with `COUNT(*)` or grouped summaries instead of loading the complete motherboard list. Discovery queries show at most 50 aliases/serials at a time. Telemetry and history queries must use a bounded time interval and aggregate in SQL; if the interval is missing, the agent asks for it before querying.
 
-For every Irrifarm SQL request, the sidecar adds or clamps the outer query limit to `IRRIFARM_MAX_QUERY_ROWS`. The response reports the applied limit so the agent cannot mistake a truncated result for an exact total. On MySQL, the sidecar also injects the server-side `MAX_EXECUTION_TIME` optimizer hint; the backend independently aborts its HTTP wait after `IRRIFARM_QUERY_TIMEOUT_MS` and asks the agent to narrow the MBO or time selection.
+For every Irrifarm SQL request, the sidecar adds or clamps the outer query limit to `IRRIFARM_MAX_QUERY_ROWS`. The response reports the applied limit so the agent cannot mistake a truncated result for an exact total. Queries on `senshistory` must use a statically bounded `SNS_DtEvent` range: at most 7 days for raw rows and 366 days for aggregates. On MySQL, the sidecar also injects the server-side `MAX_EXECUTION_TIME` optimizer hint; the backend independently aborts its HTTP wait after `IRRIFARM_QUERY_TIMEOUT_MS` and asks the agent to narrow the MBO or time selection.
 
 These controls are independent from database indexes. For large telemetry tables, verify that an appropriate index such as `(MBO_SN, SNS_SysDateIns)` already exists before considering a new one.
 

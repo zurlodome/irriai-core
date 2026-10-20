@@ -79,6 +79,13 @@ import { hasFeature, LICENSE_FEATURES } from './license.service';
 import { mcpService } from './mcp';
 import { memoryService } from './memory';
 import { getAzureAccessTokenForUser } from './microsoft-auth.service';
+import {
+	classifyProjectScope,
+	hasProjectScopeGuard,
+	OUTSIDE_PROJECT_SCOPE,
+	UNAVAILABLE_PROJECT_SCOPE,
+	UNCLEAR_PROJECT_SCOPE,
+} from './project-scope-guard';
 import { skillService } from './skill';
 import { canGrepUserFiles } from './storage/user-files';
 import { getStoryTemplateWarnings } from './story-template-validation';
@@ -507,6 +514,35 @@ class AgentManager {
 				}
 
 				this._streamWriter = writer;
+				const userRules = this._systemPromptOverride
+					? undefined
+					: getUserRules(this._toolContext.projectFolder);
+				if (hasProjectScopeGuard(userRules)) {
+					let reply: string | undefined;
+					try {
+						const scope = await classifyProjectScope(this.chat.projectId, userRules, uiMessages);
+						reply =
+							scope === 'outside'
+								? OUTSIDE_PROJECT_SCOPE
+								: scope === 'unclear'
+									? UNCLEAR_PROJECT_SCOPE
+									: undefined;
+					} catch (cause) {
+						logger.error(`Project scope classification failed: ${String(cause)}`, {
+							source: 'agent',
+							projectId: this.chat.projectId,
+							context: { chatId: this.chat.id, modelId: 'gpt-6-luna' },
+						});
+						reply = UNAVAILABLE_PROJECT_SCOPE;
+					}
+					if (reply) {
+						const id = crypto.randomUUID();
+						writer.write({ type: 'text-start', id });
+						writer.write({ type: 'text-delta', id, delta: reply });
+						writer.write({ type: 'text-end', id });
+						return;
+					}
+				}
 				const messages = await this._buildModelMessages(
 					uiMessages,
 					opts.mentions,

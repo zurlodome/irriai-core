@@ -42,7 +42,7 @@ from nao_core.context import get_context_provider  # noqa: E402
 
 port = int(os.environ.get("PORT", 8005))
 irrifarm_max_query_rows = int(os.environ.get("IRRIFARM_MAX_QUERY_ROWS", 500))
-irrifarm_query_timeout_ms = int(os.environ.get("IRRIFARM_QUERY_TIMEOUT_MS", 30_000))
+irrifarm_query_timeout_ms = int(os.environ.get("IRRIFARM_QUERY_TIMEOUT_MS", 15_000))
 
 # Global scheduler instance
 scheduler = None

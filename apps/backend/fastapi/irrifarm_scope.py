@@ -1,5 +1,6 @@
 import json
 import os
+from datetime import date, timedelta
 
 from sqlglot import exp, parse_one
 from sqlglot.errors import ParseError
@@ -106,6 +107,8 @@ def apply_irrifarm_query_guardrails(
     if not isinstance(statement, (exp.Select, exp.Union)):
         raise IrrifarmScopeError("Only SELECT queries are allowed for Irrifarm users")
 
+    _validate_senshistory_period(statement)
+
     existing_limit = _literal_row_limit(statement)
     applied_limit = min(existing_limit, max_rows) if existing_limit else max_rows
     if existing_limit is None or existing_limit > max_rows:
@@ -115,6 +118,135 @@ def apply_irrifarm_query_guardrails(
         _set_mysql_execution_timeout(statement, timeout_ms)
 
     return statement.sql(dialect=sqlglot_dialect), applied_limit
+
+
+def _validate_senshistory_period(statement: exp.Select | exp.Union) -> None:
+    if not any(
+        table.name.lower() == "senshistory" for table in statement.find_all(exp.Table)
+    ):
+        return
+
+    time_column = "sns_dtevent"
+    for disjunction in statement.find_all(exp.Or):
+        if any(
+            column.name.lower() == time_column
+            for column in disjunction.find_all(exp.Column)
+        ):
+            raise IrrifarmScopeError(
+                "senshistory time bounds must be combined with AND"
+            )
+
+    lower_bounds: list[date] = []
+    upper_bounds: list[date] = []
+    has_lower_bound = False
+    has_upper_bound = False
+
+    for predicate in statement.walk():
+        if isinstance(predicate, exp.Between) and _is_time_column(predicate.this):
+            has_lower_bound = has_upper_bound = True
+            if lower := _static_date(predicate.args.get("low")):
+                lower_bounds.append(lower)
+            if upper := _static_date(predicate.args.get("high")):
+                upper_bounds.append(upper)
+            continue
+
+        if not isinstance(predicate, (exp.GT, exp.GTE, exp.LT, exp.LTE)):
+            continue
+
+        left, right = predicate.this, predicate.expression
+        if _is_time_column(left):
+            is_lower = isinstance(predicate, (exp.GT, exp.GTE))
+            value = right
+        elif _is_time_column(right):
+            is_lower = isinstance(predicate, (exp.LT, exp.LTE))
+            value = left
+        else:
+            continue
+
+        if is_lower:
+            has_lower_bound = True
+            if bound := _static_date(value):
+                lower_bounds.append(bound)
+        else:
+            has_upper_bound = True
+            if bound := _static_date(value):
+                upper_bounds.append(bound)
+
+    if not has_lower_bound or not has_upper_bound:
+        raise IrrifarmScopeError(
+            "senshistory queries require both lower and upper SNS_DtEvent bounds"
+        )
+
+    if not lower_bounds or not upper_bounds:
+        raise IrrifarmScopeError(
+            "senshistory time bounds must use fixed dates or CURRENT_DATE day intervals"
+        )
+
+    period_start = max(lower_bounds)
+    period_end = min(upper_bounds)
+    period = period_end - period_start
+    if period > timedelta(days=366):
+        raise IrrifarmScopeError(
+            "senshistory queries cannot span more than 366 days; narrow the period"
+        )
+    if _returns_raw_rows(statement) and period > timedelta(days=7):
+        raise IrrifarmScopeError(
+            "raw senshistory queries cannot span more than 7 days; aggregate the data or narrow the period"
+        )
+
+
+def _is_time_column(expression: exp.Expression | None) -> bool:
+    return (
+        isinstance(expression, exp.Column) and expression.name.lower() == "sns_dtevent"
+    )
+
+
+def _static_date(expression: exp.Expression | None) -> date | None:
+    if isinstance(expression, exp.Literal) and expression.is_string:
+        try:
+            return date.fromisoformat(expression.this.strip()[:10])
+        except (TypeError, ValueError):
+            return None
+    if isinstance(expression, exp.CurrentDate):
+        return date.today()
+    if isinstance(expression, (exp.Add, exp.Sub)):
+        base = _static_date(expression.this)
+        interval = expression.expression
+        if base is None or not isinstance(interval, exp.Interval):
+            return None
+        delta = _day_delta(interval.this, interval.args.get("unit"))
+        if delta is None:
+            return None
+        return base + delta if isinstance(expression, exp.Add) else base - delta
+    if isinstance(expression, (exp.DateAdd, exp.DateSub)):
+        base = _static_date(expression.this)
+        delta = _day_delta(expression.expression, expression.args.get("unit"))
+        if base is None or delta is None:
+            return None
+        return base + delta if isinstance(expression, exp.DateAdd) else base - delta
+    return None
+
+
+def _day_delta(
+    amount: exp.Expression | None, unit: exp.Expression | None
+) -> timedelta | None:
+    if not isinstance(unit, exp.Var) or unit.name.upper() != "DAY":
+        return None
+    if not isinstance(amount, exp.Literal):
+        return None
+    try:
+        return timedelta(days=int(amount.this))
+    except (TypeError, ValueError):
+        return None
+
+
+def _returns_raw_rows(statement: exp.Select | exp.Union) -> bool:
+    if next(statement.find_all(exp.Group), None) is not None:
+        return False
+    return not any(
+        aggregate.find_ancestor(exp.Window) is None
+        for aggregate in statement.find_all(exp.AggFunc)
+    )
 
 
 def _replace_with_scoped_subquery(

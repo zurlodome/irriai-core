@@ -26,6 +26,12 @@ export interface IrrifarmAuthConfig {
 		clientId: number;
 		clientLevel: number;
 	};
+	adminFixture?: {
+		username: string;
+		userId: number;
+		clientId: number;
+		clientLevel: number;
+	};
 }
 
 type ApiClient = Pick<IrrifarmApiClient, 'checkUser' | 'getMotherBoardsByClient'>;
@@ -66,8 +72,10 @@ export class IrrifarmAuthService {
 	}
 
 	private resolveFixture(username: string): Omit<IrrifarmResolvedIdentity, 'mboSns'> {
-		const fixture = this.config.fixture;
-		if (!fixture || fixture.username.toLowerCase() !== username.toLowerCase()) {
+		const fixture = [this.config.fixture, this.config.adminFixture].find(
+			(candidate) => candidate?.username.toLowerCase() === username.toLowerCase(),
+		);
+		if (!fixture) {
 			throw new IrrifarmAuthError('No Irrifarm fixture is configured for this user.');
 		}
 		return {
@@ -121,6 +129,18 @@ export function createIrrifarmAuthConfigFromEnv(): IrrifarmAuthConfig | null {
 	) {
 		throw new Error('All IRRIFARM_FIXTURE_* values are required in fixture mode.');
 	}
+	const adminValues = [
+		env.IRRIFARM_FIXTURE_ADMIN_USERNAME,
+		env.IRRIFARM_FIXTURE_ADMIN_USER_ID,
+		env.IRRIFARM_FIXTURE_ADMIN_CLIENT_ID,
+		env.IRRIFARM_FIXTURE_ADMIN_CLIENT_LEVEL,
+	];
+	if (adminValues.some(Boolean) && !adminValues.every(Boolean)) {
+		throw new Error('All IRRIFARM_FIXTURE_ADMIN_* values are required when the admin fixture is configured.');
+	}
+	if (env.IRRIFARM_FIXTURE_ADMIN_USERNAME?.toLowerCase() === env.IRRIFARM_FIXTURE_USERNAME.toLowerCase()) {
+		throw new Error('Irrifarm fixture usernames must be distinct.');
+	}
 	return {
 		mode: 'fixture',
 		fixture: {
@@ -129,6 +149,14 @@ export function createIrrifarmAuthConfigFromEnv(): IrrifarmAuthConfig | null {
 			clientId: env.IRRIFARM_FIXTURE_CLIENT_ID,
 			clientLevel: env.IRRIFARM_FIXTURE_CLIENT_LEVEL,
 		},
+		adminFixture: env.IRRIFARM_FIXTURE_ADMIN_USERNAME
+			? {
+					username: env.IRRIFARM_FIXTURE_ADMIN_USERNAME,
+					userId: env.IRRIFARM_FIXTURE_ADMIN_USER_ID!,
+					clientId: env.IRRIFARM_FIXTURE_ADMIN_CLIENT_ID!,
+					clientLevel: env.IRRIFARM_FIXTURE_ADMIN_CLIENT_LEVEL!,
+				}
+			: undefined,
 	};
 }
 

@@ -21,8 +21,16 @@ export const irrifarmTestPageRoutes = async (app: App) => {
 	});
 
 	app.post('/test', async (request, reply) => {
-		const username = env.IRRIFARM_TEST_USERNAME ?? env.IRRIFARM_FIXTURE_USERNAME;
-		if (!env.IRRIFARM_BASE_URL || !username || !env.IRRIFARM_TEST_PASSWORD) {
+		const account = (request.body as { account?: string } | undefined)?.account ?? 'domenico';
+		if (account !== 'domenico' && account !== 'vincenzo') {
+			return reply.status(400).type('text/plain; charset=utf-8').send('Account demo non valido.');
+		}
+		const username =
+			account === 'vincenzo'
+				? env.IRRIFARM_FIXTURE_ADMIN_USERNAME
+				: (env.IRRIFARM_TEST_USERNAME ?? env.IRRIFARM_FIXTURE_USERNAME);
+		const password = account === 'vincenzo' ? env.IRRIFARM_TEST_ADMIN_PASSWORD : env.IRRIFARM_TEST_PASSWORD;
+		if (!env.IRRIFARM_BASE_URL || !username || !password) {
 			return reply.status(503).type('text/plain; charset=utf-8').send('Accesso demo non configurato.');
 		}
 
@@ -31,7 +39,7 @@ export const irrifarmTestPageRoutes = async (app: App) => {
 				baseUrl: env.IRRIFARM_BASE_URL,
 				timeoutMs: env.IRRIFARM_REQUEST_TIMEOUT_MS,
 			});
-			const token = await client.createAppToken(username, env.IRRIFARM_TEST_PASSWORD);
+			const token = await client.createAppToken(username, password);
 			const { dispatchAuthRequest } = await import('./auth');
 			const response = await dispatchAuthRequest({
 				method: 'POST',
@@ -78,11 +86,12 @@ export function renderIrrifarmSsoTestPage(mode: string): string {
 		<main>
 			<h1>Ambiente di collaudo IrriAI</h1>
 			<p>Modalità backend: <span class="mode">${authMode}</span></p>
-			<p>Accesso riservato al collaudo concordato. Le credenziali tecniche (Domenico) sono gestite dal server e non vengono inviate al browser.</p>
+			<p>Accesso riservato al collaudo concordato. Le credenziali tecniche sono gestite dal server e non vengono inviate al browser.</p>
 			<form method="post" action="/api/auth/irrifarm/test">
-				<button type="submit">Accedi all'ambiente demo</button>
+				<button type="submit" name="account" value="domenico">Accedi come Domenico (singolo MBO)</button>
+				<button type="submit" name="account" value="vincenzo">Accedi come Vincenzo (tutti i controller)</button>
 			</form>
-			<p class="note">Il pulsante genera una sessione temporanea per l'account Irrifarm di test.</p>
+			<p class="note">Ogni pulsante genera una sessione temporanea per l'account Irrifarm selezionato.</p>
 		</main>
 	</body>
 </html>`;
