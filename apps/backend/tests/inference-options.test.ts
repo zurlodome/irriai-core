@@ -200,6 +200,22 @@ describe('OpenAI / Azure', () => {
 		expect(options.reasoningSummary).toBe('auto');
 	});
 
+	it('marks catalogued reasoning models as reasoning for the OpenAI and Azure SDK adapters', () => {
+		for (const provider of ['openai', 'azure'] as const) {
+			for (const modelId of ['gpt-5.6-sol', 'gpt-6-luna']) {
+				const { options } = resolve(provider, modelId, { reasoningEffort: 'low' });
+				expect(options.forceReasoning).toBe(true);
+				expect(options.reasoningSummary).toBe('auto');
+				expect(options.reasoningEffort).toBe('low');
+			}
+		}
+	});
+
+	it('does not force reasoning for a known sampling model or an unlisted Azure deployment', () => {
+		expect(resolve('openai', 'gpt-4.1').options).not.toHaveProperty('forceReasoning');
+		expect(resolve('azure', 'my-gpt-deployment').options).not.toHaveProperty('forceReasoning');
+	});
+
 	it('drops the reasoningSummary default for non-reasoning models', () => {
 		const { options } = resolve('openai', 'gpt-4.1');
 

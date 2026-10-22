@@ -81,4 +81,25 @@ describe('getProjectAvailableModels', () => {
 			},
 		]);
 	});
+
+	it('puts the project answer model first even when another database provider was configured earlier', async () => {
+		const dir = writeConfig([
+			'project_name: demo',
+			'agent_default_model:',
+			'  provider: azure',
+			'  model_id: gpt-5.4-mini',
+		]);
+		mocks.getProjectById.mockResolvedValue({ path: dir, envVars: {} });
+		mocks.getProjectLlmConfigs.mockResolvedValue([
+			{ provider: 'openai', enabledModels: ['gpt-5-mini'], customModels: [], baseUrl: null },
+			{ provider: 'azure', enabledModels: ['gpt-5.4-mini', 'gpt-6-luna'], customModels: [], baseUrl: null },
+		]);
+
+		const models = await getProjectAvailableModels('project-1');
+		expect(models.map(({ provider, modelId }) => `${provider}:${modelId}`)).toEqual([
+			'azure:gpt-5.4-mini',
+			'openai:gpt-5-mini',
+			'azure:gpt-6-luna',
+		]);
+	});
 });

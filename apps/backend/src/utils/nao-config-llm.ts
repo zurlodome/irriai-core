@@ -141,6 +141,24 @@ export function findConfigLlmProvider(config: ConfigLlm | null, provider: LlmPro
 	return config?.providers.find((candidate) => candidate.provider === provider) ?? null;
 }
 
+/** Project-specific default for new agent conversations, independent of provider credentials. */
+export function readProjectDefaultAnswerModel(projectPath: string): { provider: LlmProvider; modelId: string } | null {
+	try {
+		const config = yaml.load(fs.readFileSync(configPath(projectPath), 'utf-8'));
+		const selection = isRecord(config) ? config.agent_default_model : null;
+		if (!isRecord(selection) || typeof selection.model_id !== 'string' || !selection.model_id.trim()) {
+			return null;
+		}
+		if (typeof selection.provider !== 'string') {
+			return null;
+		}
+		const provider = resolveProviderName(selection.provider, undefined);
+		return provider ? { provider, modelId: selection.model_id.trim() } : null;
+	} catch {
+		return null;
+	}
+}
+
 const rawCache = new Map<string, { mtimeMs: number; llm: unknown }>();
 
 /** Parse the config file, caching by modification time so hot paths only pay a stat. */

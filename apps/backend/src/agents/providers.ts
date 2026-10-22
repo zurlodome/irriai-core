@@ -311,6 +311,16 @@ export function createProviderModel(
 
 function resolveDefaultOptions(provider: LlmProvider, modelId: string, defaultOptions: object): object {
 	if (getModelCapabilities(provider, modelId)?.thinking !== 'none') {
+		const kind = providerKind(provider);
+		const knownReasoningModel = PROVIDER_META[kind].models.some(
+			(model) =>
+				model.id === modelId &&
+				model.capabilities?.thinking !== undefined &&
+				model.capabilities.thinking !== 'none',
+		);
+		if ((kind === 'openai' || kind === 'azure') && knownReasoningModel) {
+			return { ...defaultOptions, forceReasoning: true };
+		}
 		return defaultOptions;
 	}
 	const { reasoningSummary: _reasoningSummary, ...sampling } = defaultOptions as { reasoningSummary?: unknown };

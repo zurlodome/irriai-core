@@ -13,7 +13,13 @@ import * as projectQueries from '../queries/project.queries';
 import * as projectLlmConfigQueries from '../queries/project-llm-config.queries';
 import type { CustomModelMetadata, ProviderSettings } from '../types/llm';
 import { extractLlmProviderOptions } from './nao-config';
-import { type ConfigLlm, type ConfigLlmProvider, findConfigLlmProvider, readProjectConfigLlm } from './nao-config-llm';
+import {
+	type ConfigLlm,
+	type ConfigLlmProvider,
+	findConfigLlmProvider,
+	readProjectConfigLlm,
+	readProjectDefaultAnswerModel,
+} from './nao-config-llm';
 
 export { getDefaultModelId };
 
@@ -330,7 +336,7 @@ export const getProjectAvailableModels = async (
 ): Promise<Array<{ provider: LlmProvider; modelId: string; name: string; baseUrl: string | null }>> => {
 	const sources = await getProjectModelSources(projectId);
 
-	return sources.flatMap(({ provider, enabledModels, customModels, baseUrl }) => {
+	const available = sources.flatMap(({ provider, enabledModels, customModels, baseUrl }) => {
 		if (enabledModels.length === 0) {
 			// Providers with no built-in catalogue (Azure deployments, custom endpoints) only
 			// expose the models an admin declared, so they contribute nothing until then.
@@ -345,6 +351,15 @@ export const getProjectAvailableModels = async (
 			baseUrl,
 		}));
 	});
+	const project = await projectQueries.getProjectById(projectId).catch(() => null);
+	const preferred = project?.path ? readProjectDefaultAnswerModel(project.path) : null;
+	const preferredIndex = preferred
+		? available.findIndex((model) => model.provider === preferred.provider && model.modelId === preferred.modelId)
+		: -1;
+	if (preferredIndex > 0) {
+		available.unshift(available.splice(preferredIndex, 1)[0]);
+	}
+	return available;
 };
 
 /** The models declared for each provider, used to price usage on top of nao's built-in table. */
