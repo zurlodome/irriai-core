@@ -1,12 +1,41 @@
+import crypto from 'node:crypto';
+
 import type { App } from '../app';
 import { env } from '../env';
-import { IrrifarmApiClient } from '../services/irrifarm-api.client';
+import { IrrifarmApiClient, IrrifarmApiError } from '../services/irrifarm-api.client';
 
 export function shouldRegisterIrrifarmTestPage(_mode: string, explicitlyEnabled: boolean): boolean {
 	return explicitlyEnabled;
 }
 
 export const irrifarmTestPageRoutes = async (app: App) => {
+	app.addHook('onRequest', async (request, reply) => {
+		reply.header('Cache-Control', 'no-store').header('Pragma', 'no-cache');
+		const password = env.IRRIFARM_TEST_PAGE_PASSWORD;
+		if (!password) {
+			return reply.status(503).type('text/plain; charset=utf-8').send('Pagina di test non configurata.');
+		}
+
+		const authorization = request.headers.authorization;
+		const match = /^Basic ([A-Za-z0-9+/]+={0,2})$/.exec(authorization ?? '');
+		const credentials = match ? Buffer.from(match[1], 'base64').toString('utf8') : '';
+		const separator = credentials.indexOf(':');
+		const suppliedPassword = separator >= 0 ? credentials.slice(separator + 1) : '';
+		const expectedHash = crypto.createHash('sha256').update(password).digest();
+		const suppliedHash = crypto.createHash('sha256').update(suppliedPassword).digest();
+		if (
+			separator < 0 ||
+			credentials.slice(0, separator) !== 'test' ||
+			!crypto.timingSafeEqual(expectedHash, suppliedHash)
+		) {
+			return reply
+				.status(401)
+				.header('WWW-Authenticate', 'Basic realm="Irrifarm test", charset="UTF-8"')
+				.type('text/plain; charset=utf-8')
+				.send('Autenticazione richiesta.');
+		}
+	});
+
 	app.get('/test', async (_request, reply) => {
 		reply
 			.header('Cache-Control', 'no-store')
@@ -34,18 +63,22 @@ export const irrifarmTestPageRoutes = async (app: App) => {
 			return reply.status(503).type('text/plain; charset=utf-8').send('Accesso demo non configurato.');
 		}
 
+		let stage: 'token' | 'sign-in' = 'token';
 		try {
 			const client = new IrrifarmApiClient({
 				baseUrl: env.IRRIFARM_BASE_URL,
 				timeoutMs: env.IRRIFARM_REQUEST_TIMEOUT_MS,
 			});
 			const token = await client.createAppToken(username, password);
+			stage = 'sign-in';
 			const { dispatchAuthRequest } = await import('./auth');
+			const headers = { ...request.headers };
+			delete headers.authorization;
 			const response = await dispatchAuthRequest({
 				method: 'POST',
 				url: '/api/auth/sign-in/irrifarm',
 				headers: {
-					...request.headers,
+					...headers,
 					'content-type': 'application/json',
 				},
 				body: { token, username },
@@ -55,7 +88,13 @@ export const irrifarmTestPageRoutes = async (app: App) => {
 			response.headers.forEach((value, key) => reply.header(key, value));
 			return reply.send(response.body ? await response.text() : null);
 		} catch (error) {
-			request.log.error({ err: error }, 'Irrifarm demo sign-in failed');
+			request.log.error({ err: error, account, stage }, 'Irrifarm demo sign-in failed');
+			if (stage === 'token' && error instanceof IrrifarmApiError) {
+				const message = error.status
+					? `Irrifarm ha rifiutato l'accesso demo (HTTP ${error.status}). Verifica le credenziali di ${account}.`
+					: 'Connessione a Irrifarm non riuscita. Controlla i log del backend.';
+				return reply.status(502).type('text/plain; charset=utf-8').send(message);
+			}
 			return reply.status(502).type('text/plain; charset=utf-8').send('Accesso demo non riuscito. Riprova.');
 		}
 	});

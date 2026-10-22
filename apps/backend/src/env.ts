@@ -105,6 +105,7 @@ const baseEnvSchema = z.object({
 		.optional()
 		.default('false')
 		.transform((val) => val === 'true'),
+	IRRIFARM_TEST_PAGE_PASSWORD: z.string().min(1).optional(),
 	IRRIFARM_TEST_USERNAME: z.string().min(1).optional(),
 	IRRIFARM_TEST_PASSWORD: z.string().min(1).optional(),
 	IRRIFARM_TEST_ADMIN_PASSWORD: z.string().min(1).optional(),

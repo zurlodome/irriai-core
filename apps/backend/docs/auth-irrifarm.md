@@ -22,7 +22,7 @@ The Irrifarm backend obtains an Irrifarm app JWT and returns an auto-submitting 
 
 The endpoint validates the Irrifarm identity, fetches its authorized motherboards, creates or finds the linked nao user, sets the normal Better Auth session cookie, and redirects to `/`.
 
-Open `/api/auth/irrifarm/test` to use the temporary test hand-off with separate Domenico and Vincenzo buttons. The nao backend obtains the JWT from Irrifarm using server-side test credentials; neither the password nor the JWT is rendered in the browser. The page is disabled unless explicitly enabled.
+Open `/api/auth/irrifarm/test` to use the temporary test hand-off with separate Domenico and Vincenzo buttons. The browser prompts for HTTP Basic credentials: username `test` and the password configured in `IRRIFARM_TEST_PAGE_PASSWORD`. Both the page and its POST action require these credentials. The nao backend obtains the JWT from Irrifarm using separate server-side test credentials; neither those passwords nor the JWT are rendered in the browser. The page is disabled unless explicitly enabled and returns 503 if the page password is missing.
 
 To expose it temporarily in a test deployment running with `MODE=prod`, configure:
 
@@ -30,12 +30,13 @@ To expose it temporarily in a test deployment running with `MODE=prod`, configur
 MODE=prod
 BETTER_AUTH_URL=https://nao.example.com
 IRRIFARM_TEST_PAGE_ENABLED=true
+IRRIFARM_TEST_PAGE_PASSWORD=<strong secret App Service or Key Vault reference>
 IRRIFARM_TEST_USERNAME=domenico
 IRRIFARM_TEST_PASSWORD=<secret App Service or Key Vault reference>
 IRRIFARM_TEST_ADMIN_PASSWORD=<secret App Service or Key Vault reference>
 ```
 
-The page will be available at `https://nao.example.com/api/auth/irrifarm/test`. Restrict it to the agreed client IPs at the App Service layer. Set `IRRIFARM_TEST_PAGE_ENABLED=false` and remove the test credentials after testing. Never commit the test passwords or expose them to browser code.
+The page will be available at `https://nao.example.com/api/auth/irrifarm/test`. Use HTTPS and restrict it to the agreed client IPs at the App Service layer. Set `IRRIFARM_TEST_PAGE_ENABLED=false` and remove the test credentials after testing. Never commit the test passwords or expose them to browser code.
 
 The JWT, username, or IDs must not be placed in the URL. Configure the Irrifarm application origin in `IRRIFARM_APP_ORIGINS` so Better Auth can enforce its origin check.
 

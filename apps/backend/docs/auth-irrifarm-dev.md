@@ -12,6 +12,7 @@ BETTER_AUTH_URL=https://app-irriai-weu-test-hxghdvhfdsg5fvdx.westeurope-01.azure
 IRRIFARM_BASE_URL=https://app-irrifarm-service-weu-test-ftd7crece2dxfzga.westeurope-01.azurewebsites.net
 IRRIFARM_AUTH_MODE=fixture
 IRRIFARM_TEST_PAGE_ENABLED=true
+IRRIFARM_TEST_PAGE_PASSWORD=<secret App Service o riferimento Key Vault>
 IRRIFARM_REQUEST_TIMEOUT_MS=10000
 
 IRRIFARM_TEST_USERNAME=domenico
@@ -43,11 +44,11 @@ Se il POST di hand-off parte dal frontend Irrifarm anziche' dalla pagina di test
 IRRIFARM_APP_ORIGINS=https://<frontend-irrifarm-dev>
 ```
 
-`IRRIFARM_TEST_PASSWORD` e `IRRIFARM_TEST_ADMIN_PASSWORD` devono essere configurate come secret dell'App Service, preferibilmente tramite riferimenti Key Vault. Non inserirle nel repository, nell'HTML o nel JavaScript. Limitare inoltre la pagina tramite le Access Restrictions di App Service agli IP concordati per il collaudo.
+`IRRIFARM_TEST_PAGE_PASSWORD`, `IRRIFARM_TEST_PASSWORD` e `IRRIFARM_TEST_ADMIN_PASSWORD` devono essere configurate come secret dell'App Service, preferibilmente tramite riferimenti Key Vault. Non inserirle nel repository, nell'HTML o nel JavaScript. Limitare inoltre la pagina tramite le Access Restrictions di App Service agli IP concordati per il collaudo.
 
 ## Prova rapida
 
-1. Aprire <https://app-irriai-weu-test-hxghdvhfdsg5fvdx.westeurope-01.azurewebsites.net/api/auth/irrifarm/test>.
+1. Aprire <https://app-irriai-weu-test-hxghdvhfdsg5fvdx.westeurope-01.azurewebsites.net/api/auth/irrifarm/test> e inserire utente `test` e la password configurata in `IRRIFARM_TEST_PAGE_PASSWORD` quando il browser la richiede.
 2. Premere `Accedi come Domenico (singolo MBO)`. Il backend genera il JWT tramite `apptokenreg` e completa l'accesso senza inviare password o token al browser.
 3. Verificare in Account che l'utente sia `Irrifarm account - ID 470`.
 4. Chiedere in chat: `Dammi la tabella giornaliera della pressione in linea a gennaio 2025.`
