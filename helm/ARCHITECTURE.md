@@ -119,7 +119,7 @@ The `DB_URI` connects the backend to the `postgres` service by Docker network na
 The Docker image is built via a **multi-stage Dockerfile** with 5 stages:
 
 ```
-Stage 1: base        → Node.js 24-slim + Bun
+Stage 1: base        → Node.js 24.22.1-slim + Bun
 Stage 2: deps        → npm/bun install for all workspaces
 Stage 3: frontend    → Vite build of React SPA
 Stage 4: python      → uv install of nao-core Python package

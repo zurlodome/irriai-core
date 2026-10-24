@@ -6,7 +6,7 @@
 	],
 	"packageManager": "npm@11.10.1",
 	"engines": {
-		"node": ">=22.14.0 <23",
+		"node": ">=24.22.1 <25",
 		"npm": "11.10.1"
 	},
 	"scripts": {

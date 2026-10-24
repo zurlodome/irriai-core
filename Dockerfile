@@ -1,7 +1,7 @@
 # =============================================================================
 # STAGE 1: Base image with common dependencies
 # =============================================================================
-FROM node:24-slim AS base
+FROM node:24.22.1-slim AS base
 WORKDIR /app
 
 RUN npm install -g bun
