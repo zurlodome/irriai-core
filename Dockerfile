@@ -37,6 +37,11 @@ RUN --mount=type=cache,target=/root/.bun/install/cache \
     bun install --production --frozen-lockfile --ignore-scripts --filter '!@nao/frontend' \
     && mkdir -p apps/backend/node_modules apps/shared/node_modules
 
+# Exercise the shared barrel import against production dependencies. Backend
+# startup imports it too, including the chart renderer used for exports.
+RUN --mount=type=bind,source=apps/shared/src,target=/app/apps/shared/src \
+    bun -e "await import('@nao/shared'); console.log('Shared runtime imports ready')"
+
 # =============================================================================
 # STAGE 3: Frontend builder
 # =============================================================================
