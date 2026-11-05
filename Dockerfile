@@ -23,6 +23,20 @@ COPY apps/shared/package.json ./apps/shared/
 RUN --mount=type=cache,target=/root/.bun/install/cache \
     bun install --ignore-scripts
 
+# Install runtime dependencies into a clean stage, excluding the frontend
+# workspace and devDependencies from the final node_modules layer.
+# Reuse the lockfile resolved by deps to keep both installs on the same versions.
+FROM base AS runtime-deps
+
+COPY --from=deps /app/package.json /app/bun.lock /app/bunfig.toml ./
+COPY --from=deps /app/apps/frontend/package.json ./apps/frontend/
+COPY --from=deps /app/apps/backend/package.json ./apps/backend/
+COPY --from=deps /app/apps/shared/package.json ./apps/shared/
+
+RUN --mount=type=cache,target=/root/.bun/install/cache \
+    bun install --production --frozen-lockfile --ignore-scripts --filter '!@nao/frontend' \
+    && mkdir -p apps/backend/node_modules apps/shared/node_modules
+
 # =============================================================================
 # STAGE 3: Frontend builder
 # =============================================================================
@@ -115,8 +129,10 @@ WORKDIR /app
 # Copy all artifacts with --chown to avoid expensive recursive `chown -R`
 COPY --from=python-builder --chown=nao:nao /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
 COPY --from=python-builder --chown=nao:nao /usr/local/bin/nao /usr/local/bin/nao
-COPY --from=deps --chown=nao:nao /app/package.json ./
-COPY --from=deps --chown=nao:nao /app/node_modules ./node_modules
+COPY --from=runtime-deps --chown=nao:nao /app/package.json ./
+COPY --from=runtime-deps --chown=nao:nao /app/node_modules ./node_modules
+COPY --from=runtime-deps --chown=nao:nao /app/apps/backend/node_modules ./apps/backend/node_modules
+COPY --from=runtime-deps --chown=nao:nao /app/apps/shared/node_modules ./apps/shared/node_modules
 
 # Verify the compiled MySQL driver again in the final image. This catches
 # missing runtime shared libraries (for example libmariadb.so) during the
