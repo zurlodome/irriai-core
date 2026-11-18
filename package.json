@@ -7,7 +7,8 @@
 	"packageManager": "npm@11.10.1",
 	"engines": {
 		"node": ">=24.22.1 <25",
-		"npm": "11.10.1"
+		"npm": "11.10.1",
+		"bun": "1.4.4"
 	},
 	"scripts": {
 		"dev": "npm-run-all -lp dev:backend dev:frontend dev:fastapi",
@@ -22,8 +23,8 @@
 		"lint:fix:backend": "npm run lint:fix -w @nao/backend",
 		"lint:fix:frontend": "npm run lint:fix -w @nao/frontend",
 		"lint:fix:shared": "npm run lint:fix -w @nao/shared",
-		"format": "prettier --write .",
-		"format:check": "prettier --check .",
+		"format": "prettier --write . \"!**/.pytest_cache/**\" \"!**/.venv/**\"",
+		"format:check": "prettier --check . \"!**/.pytest_cache/**\" \"!**/.venv/**\"",
 		"cli:fix": "cd cli && make lint-fix",
 		"cli:check": "cd cli && make lint",
 		"lock:normalize": "npm install --package-lock-only --ignore-scripts --no-audit --no-fund",
@@ -33,9 +34,9 @@
 		"setup": "cd scripts && ./setup.sh",
 		"release": "./scripts/release.sh",
 		"prepare": "husky",
-		"pg:start": "docker compose -f docker-compose.postgres.yml up -d",
-		"pg:stop": "docker compose -f docker-compose.postgres.yml stop",
-		"pg:reset": "docker compose -f docker-compose.postgres.yml down -v"
+		"pg:start": "docker compose --project-name irriai-postgres-dev -f docker-compose.postgres.yml up -d",
+		"pg:stop": "docker compose --project-name irriai-postgres-dev -f docker-compose.postgres.yml stop",
+		"pg:reset": "docker compose --project-name irriai-postgres-dev -f docker-compose.postgres.yml down -v"
 	},
 	"devDependencies": {
 		"@eslint/js": "^9.39.2",
@@ -46,10 +47,9 @@
 		"typescript-eslint": "^8.51.0"
 	},
 	"dependencies": {
-		"@boxlite-ai/boxlite": "^0.3.0",
+		"@boxlite-ai/boxlite": "^0.10.0",
 		"@emnapi/core": "^1.9.2",
 		"@emnapi/runtime": "^1.9.2",
-		"@pydantic/monty": "^0.0.7",
 		"@streamdown/code": "^1.1.1",
 		"depd": "^2.0.0"
 	}

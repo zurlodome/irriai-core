@@ -4,7 +4,13 @@
 FROM node:24.22.1-slim AS base
 WORKDIR /app
 
-RUN npm install -g bun
+# Optional corporate CA bundle is supplied with --secret id=build_ca,src=... .
+# Secret mounts and these process-local variables are not retained in the image.
+RUN --mount=type=secret,id=build_ca \
+    if [ -f /run/secrets/build_ca ]; then \
+        export NODE_EXTRA_CA_CERTS=/run/secrets/build_ca npm_config_cafile=/run/secrets/build_ca; \
+    fi; \
+    npm install -g npm@11.10.1 bun@1.4.4
 
 # =============================================================================
 # STAGE 2: JS dependency installer (shared across frontend and backend)
@@ -21,7 +27,10 @@ COPY apps/shared/package.json ./apps/shared/
 # @vscode/ripgrep >=1.18 ships its rg binary via platform optionalDependencies,
 # so no postinstall download (and no GITHUB_TOKEN) is needed.
 RUN --mount=type=cache,target=/root/.bun/install/cache \
-    bun install --ignore-scripts
+    --mount=type=secret,id=build_ca \
+    set --; \
+    if [ -f /run/secrets/build_ca ]; then set -- --cafile /run/secrets/build_ca; fi; \
+    bun install "$@" --frozen-lockfile --ignore-scripts
 
 # Install runtime dependencies into a clean stage, excluding the frontend
 # workspace and devDependencies from the final node_modules layer.
@@ -34,13 +43,17 @@ COPY --from=deps /app/apps/backend/package.json ./apps/backend/
 COPY --from=deps /app/apps/shared/package.json ./apps/shared/
 
 RUN --mount=type=cache,target=/root/.bun/install/cache \
-    bun install --production --frozen-lockfile --ignore-scripts --filter '!@nao/frontend' \
+    --mount=type=secret,id=build_ca \
+    set --; \
+    if [ -f /run/secrets/build_ca ]; then set -- --cafile /run/secrets/build_ca; fi; \
+    bun install "$@" --production --frozen-lockfile --ignore-scripts --filter '!@nao/frontend' \
     && mkdir -p apps/backend/node_modules apps/shared/node_modules
 
 # Exercise the shared barrel import against production dependencies. Backend
 # startup imports it too, including the chart renderer used for exports.
 RUN --mount=type=bind,source=apps/shared/src,target=/app/apps/shared/src \
-    bun -e "await import('@nao/shared'); console.log('Shared runtime imports ready')"
+    cd /app/apps/backend \
+    && bun -e "await import('@nao/shared'); console.log('Shared runtime imports ready')"
 
 # =============================================================================
 # STAGE 3: Frontend builder
@@ -52,7 +65,9 @@ COPY apps/backend ./apps/backend
 COPY apps/shared ./apps/shared
 
 WORKDIR /app/apps/frontend
-RUN npx vite build
+# The editor and chart dependencies exceed Node's default heap during bundling.
+ARG FRONTEND_BUILD_HEAP_MB=4096
+RUN NODE_OPTIONS="--max-old-space-size=${FRONTEND_BUILD_HEAP_MB}" npx vite build
 
 # =============================================================================
 # STAGE 4: Python/FastAPI builder
@@ -86,6 +101,8 @@ RUN if [ -n "$NAO_CLI_VERSION" ]; then \
     fi
 
 RUN --mount=type=cache,target=/root/.cache/uv \
+    --mount=type=secret,id=build_ca \
+    if [ -f /run/secrets/build_ca ]; then export SSL_CERT_FILE=/run/secrets/build_ca; fi; \
     uv pip install --system '.[mysql]' 'packaging>=21.3' \
     && python -c "import importlib.metadata as metadata; import MySQLdb; import ibis.backends.mysql; print('MySQL Python dependencies installed:', 'ibis-framework', metadata.version('ibis-framework'), 'mysqlclient', metadata.version('mysqlclient'), 'packaging', metadata.version('packaging'))"
 
@@ -126,8 +143,8 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
 # Create non-root user and required directories
 RUN useradd -m -s /bin/bash nao \
-    && mkdir -p /var/log/supervisor /app/context /app/projects \
-    && chown nao:nao /var/log/supervisor /app /app/context /app/projects
+    && mkdir -p /var/log/supervisor /app/context /app/projects /app/storage \
+    && chown nao:nao /var/log/supervisor /app /app/context /app/projects /app/storage
 
 WORKDIR /app
 
@@ -147,14 +164,15 @@ RUN python -c "import importlib.metadata as metadata; import ibis.backends.mysql
 
 # Queries against the local DuckDB run with external access off, so extensions have to be on disk
 # before the first query rather than fetched on demand.
-# Mount under /app so Node's ESM resolver finds /app/node_modules (a /tmp mount would not).
-RUN --mount=type=bind,source=docker/install-duckdb-extensions.mjs,target=/app/install-duckdb-extensions.mjs \
-    DUCKDB_EXTENSION_DIR=/app/.duckdb-extensions node /app/install-duckdb-extensions.mjs \
+# Resolve the backend's dependency from its own workspace, including Bun's isolated linker layout.
+RUN --mount=type=bind,source=docker/install-duckdb-extensions.mjs,target=/app/apps/backend/install-duckdb-extensions.mjs \
+    DUCKDB_EXTENSION_DIR=/app/.duckdb-extensions node /app/apps/backend/install-duckdb-extensions.mjs \
     && chown -R nao:nao /app/.duckdb-extensions
 
 # Copy backend and shared source (no build needed — Bun runs TS directly)
 COPY --chown=nao:nao apps/backend ./apps/backend
 COPY --chown=nao:nao apps/shared ./apps/shared
+COPY --chown=nao:nao skills/write-context-rules ./skills/write-context-rules
 
 # Lock down the license public key for production: strip the dev override
 # branch from apps/backend/src/services/license-public-key.ts so the

@@ -1,21 +1,23 @@
 import {
 	renderSqlTemplate,
 	type StoryFilterSelections,
-	type StoryFilterTypeById,
+	type StoryFilterSpecById,
 	stripSqlFilterBlocks,
 } from '@nao/shared/sql-template';
+import { resolveSemanticQueryParameters } from '@nao/shared/story-parameter-template';
 import { getStoryFiltersFromCode } from '@nao/shared/story-segments';
 import { TRPCError } from '@trpc/server';
 
 import { env } from '../env';
-import * as chatQueries from '../queries/chat.queries';
-import * as irrifarmIdentityQueries from '../queries/irrifarm-identity.queries';
-import * as projectQueries from '../queries/project.queries';
 import * as storyQueries from '../queries/story.queries';
-import { assertSafeSqlIdentifier } from '../utils/sql-identifiers';
-import { executeRawSql } from './live-story';
+import { createStoryExecutionContext, executeStoryQueries, type StoryQueryData } from './live-story';
+import { compileSemanticQuery, describeSemanticLayerCached, type SemanticQuery } from './semantic-layer.service';
+import { bindSemanticQuery, semanticBindingsFromCode } from './semantic-story-bindings';
 
-const FILTER_OPTIONS_LIMIT = 100;
+interface StoryFilterExecutionOptions {
+	billingAccessVerifiedProjectId?: string;
+	viewerId?: string;
+}
 
 export function assertStoryFiltersEnabled() {
 	if (!env.BETA_STORY_FILTERS_ENABLED) {
@@ -23,80 +25,24 @@ export function assertStoryFiltersEnabled() {
 	}
 }
 
-export async function getStoryFilterOptions(
-	chatId: string,
-	storySlug: string,
-	filterId: string,
-): Promise<{ options: string[] }> {
-	const { code, projectId, projectPath, envVars, databaseId, allowedMboSns } = await loadStoryExecutionContext(
-		chatId,
-		storySlug,
-	);
-	const filter = getStoryFiltersFromCode(code).find((candidate) => candidate.id === filterId);
-	if (!filter) {
-		throw new TRPCError({ code: 'NOT_FOUND', message: `Filter "${filterId}" not found in story.` });
-	}
-
-	if (filter.options?.length) {
-		return { options: [...new Set(filter.options)] };
-	}
-
-	if (!filter.table || !filter.column) {
-		throw new TRPCError({
-			code: 'BAD_REQUEST',
-			message: `Filter "${filterId}" has no hardcoded options and is missing table/column.`,
-		});
-	}
-
-	const table = assertSafeSqlIdentifier(filter.table, 'table');
-	const column = assertSafeSqlIdentifier(filter.column, 'column');
-	const sql = `SELECT DISTINCT ${column} AS value FROM ${table} WHERE ${column} IS NOT NULL ORDER BY ${column} LIMIT ${FILTER_OPTIONS_LIMIT}`;
-	const result = await executeRawSql(sql, {
-		projectFolder: projectPath,
-		projectId,
-		databaseId: filter.databaseId ?? databaseId,
-		envVars,
-		allowedMboSns,
-	});
-	const options = result.data
-		.map((row) => {
-			if (!row || typeof row !== 'object') {
-				return null;
-			}
-			const value = (row as Record<string, unknown>).value;
-			return value === null || value === undefined ? null : String(value);
-		})
-		.filter((value): value is string => value !== null && value.trim() !== '');
-
-	return { options: [...new Set(options)].sort((a, b) => a.localeCompare(b)) };
-}
-
 export async function getFilteredStoryQueryData(
 	chatId: string,
 	storySlug: string,
 	selections: StoryFilterSelections,
-): Promise<Record<string, { data: unknown[]; columns: string[] }>> {
-	const { code, projectId, projectPath, envVars, sqlQueries, allowedMboSns } = await loadStoryExecutionContext(
-		chatId,
-		storySlug,
-	);
-	const types = filterTypesFromCode(code);
-	const queryData: Record<string, { data: unknown[]; columns: string[] }> = {};
+	executionOptions: StoryFilterExecutionOptions = {},
+): Promise<StoryQueryData> {
+	const [{ code, sqlQueries }, executionContext] = await Promise.all([
+		loadStoryCodeAndQueries(chatId, storySlug),
+		createStoryExecutionContext(chatId, executionOptions.viewerId),
+	]);
+	const specs = filterSpecsFromCode(code);
 
-	await Promise.all(
-		Object.entries(sqlQueries).map(async ([queryId, { sqlQuery, databaseId }]) => {
-			const renderedSql = renderStorySql(sqlQuery, selections, types);
-			queryData[queryId] = await executeRawSql(renderedSql, {
-				projectFolder: projectPath,
-				projectId,
-				databaseId,
-				envVars,
-				allowedMboSns,
-			});
-		}),
-	);
-
-	return queryData;
+	return executeStoryQueries(chatId, sqlQueries, {
+		executionContext,
+		renderSql: (sqlQuery) => renderStorySql(sqlQuery, selections, specs),
+		semanticBindings: semanticBindingsFromCode(code, selections),
+		billingAccessVerifiedProjectId: executionOptions.billingAccessVerifiedProjectId,
+	});
 }
 
 export async function getStoryQuerySql(
@@ -104,60 +50,75 @@ export async function getStoryQuerySql(
 	storySlug: string,
 	queryId: string,
 	selections: StoryFilterSelections = {},
-): Promise<{ sqlQuery: string; renderedSql: string }> {
-	const { code, sqlQueries } = await loadStoryExecutionContext(chatId, storySlug);
+): Promise<{
+	sqlQuery: string;
+	renderedSql: string;
+	databaseId?: string;
+	dialect?: string;
+	/** The saved query, placeholders included: what editors load and save back. */
+	semanticQuery?: SemanticQuery;
+	/** Read-only preview of the semantic query as it runs for these selections. */
+	effectiveSemanticQuery?: SemanticQuery;
+}> {
+	const { code, sqlQueries } = await loadStoryCodeAndQueries(chatId, storySlug);
 	const query = sqlQueries[queryId];
 	if (!query) {
 		throw new TRPCError({ code: 'NOT_FOUND', message: `Query "${queryId}" not found.` });
 	}
 
-	return {
+	const base = {
 		sqlQuery: query.sqlQuery,
-		renderedSql: renderStorySql(query.sqlQuery, selections, filterTypesFromCode(code)),
+		renderedSql: renderStorySql(query.sqlQuery, selections, filterSpecsFromCode(code)),
+		databaseId: query.databaseId,
+		dialect: query.dialect,
+		semanticQuery: query.semanticQuery,
 	};
+	return query.semanticQuery
+		? { ...base, ...(await previewBoundSemanticQuery(chatId, code, query.semanticQuery, selections)) }
+		: base;
 }
 
-function filterTypesFromCode(code: string): StoryFilterTypeById {
-	return Object.fromEntries(getStoryFiltersFromCode(code).map((filter) => [filter.id, filter.filterType]));
+/** The semantic query as it runs for these selections: parameters resolved, dimension filters applied, compiled. */
+async function previewBoundSemanticQuery(
+	chatId: string,
+	code: string,
+	semanticQuery: SemanticQuery,
+	selections: StoryFilterSelections,
+): Promise<{ effectiveSemanticQuery: SemanticQuery; renderedSql?: string }> {
+	const { toolContext } = await createStoryExecutionContext(chatId);
+	const bound = await bindSemanticQuery(semanticQuery, semanticBindingsFromCode(code, selections), () =>
+		describeSemanticLayerCached(toolContext).catch(() => null),
+	);
+	const effectiveQuery = resolveSemanticQueryParameters(bound.query);
+	const compiled = await compileSemanticQuery(effectiveQuery, toolContext).catch(() => null);
+	return { effectiveSemanticQuery: effectiveQuery, ...(compiled && { renderedSql: compiled.sql }) };
 }
 
-function renderStorySql(sqlQuery: string, selections: StoryFilterSelections, types: StoryFilterTypeById): string {
+function filterSpecsFromCode(code: string): StoryFilterSpecById {
+	return Object.fromEntries(
+		getStoryFiltersFromCode(code).map((filter) => [
+			filter.id,
+			{ type: filter.filterType, valueType: filter.valueType },
+		]),
+	);
+}
+
+function renderStorySql(sqlQuery: string, selections: StoryFilterSelections, specs: StoryFilterSpecById): string {
 	return Object.keys(selections).length === 0
 		? stripSqlFilterBlocks(sqlQuery)
-		: renderSqlTemplate(sqlQuery, selections, types);
+		: renderSqlTemplate(sqlQuery, selections, specs);
 }
 
-async function loadStoryExecutionContext(chatId: string, storySlug: string) {
+async function loadStoryCodeAndQueries(chatId: string, storySlug: string) {
 	const version = await storyQueries.getLatestVersionByChatAndSlug(chatId, storySlug);
 	if (!version) {
 		throw new TRPCError({ code: 'NOT_FOUND', message: 'Story not found.' });
 	}
 
-	const chat = await chatQueries.getChatInfo(chatId);
-	if (!chat) {
-		throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Chat project not found.' });
-	}
-
-	const project = await projectQueries.retrieveProjectById(chat.projectId);
-	if (!project.path) {
-		throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Project path not configured.' });
-	}
-
-	const projectId = chat.projectId;
-	const [envVars, sqlQueries, allowedMboSns] = await Promise.all([
-		projectQueries.getEnvVars(chat.projectId),
-		storyQueries.getSqlQueriesFromCode(chatId, version.code),
-		irrifarmIdentityQueries.getAllowedMboSns(chat.userId),
-	]);
-	const databaseId = Object.values(sqlQueries).find((query) => query.databaseId)?.databaseId;
+	const sqlQueries = await storyQueries.getSqlQueriesFromCode(chatId, version.code);
 
 	return {
 		code: version.code,
-		projectId,
-		projectPath: project.path,
-		envVars,
-		allowedMboSns,
-		databaseId,
 		sqlQueries,
 	};
 }

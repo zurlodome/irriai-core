@@ -26,12 +26,14 @@
 - **JS/TS lint**: `npm run lint` (runs `tsc --noEmit && eslint` across backend, frontend, shared)
 - **Python lint**: `cd cli && make lint` (runs `ty check`, `ruff check`, `ruff format --check`)
 - **Backend tests**: `npm run -w @nao/backend test` (vitest)
-- **Frontend tests**: `npm run -w @nao/frontend test` (vitest — currently no test files)
+- **Frontend and shared tests**: `npm run -w @nao/frontend test` and `npm run -w @nao/shared test` (vitest)
+- **CLI tests**: `cd cli && uv run pytest`
+- Where tests go and how to keep the suite small is described under "Tests" in `CLAUDE.md`.
 - **Pre-commit hook** (`.husky/pre-commit`): runs `npm run lint`, `npm run format:check`, `npm run db:check-migrations -w @nao/backend`, and `npm run cli:check`
 
 ### Gotchas
 
 - `mysqlclient` Python package (pulled by `nao-core[all]`) requires `libmysqlclient-dev` system package to build. The VM snapshot has this pre-installed.
 - The `npm run dev` combined command uses `npm-run-all -lp` — if any sub-process exits non-zero the entire group stops. Start services individually to isolate failures.
-- Backend uses `bun` as runtime (not Node); make sure `bun` is installed globally (`npm install -g bun`).
+- Backend uses `bun` as runtime (not Node); use Bun 1.4.4 (`npm install -g bun@1.4.4`), matching the Docker image and lockfile.
 - Node.js version is pinned in `.nvmrc` (v24.22.1). Python version is pinned in `cli/.python-version` (3.13).

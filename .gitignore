@@ -29,6 +29,9 @@ apps/backend/storage/
 nao_irriai_context_deploy_key
 nao_irriai_context_deploy_key.pub
 .meta/
+!example/.meta/
+example/.meta/*
+!example/.meta/semantic_layer/
 
 example/tests/outputs/
 
@@ -36,3 +39,4 @@ example/tests/outputs/
 .heal/
 apps/frontend/.playwright*
 sandbox/
+.venv/

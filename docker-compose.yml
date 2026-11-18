@@ -57,11 +57,11 @@ services:
             # NAO_CONTEXT_SOURCE: local
             # NAO_DEFAULT_PROJECT_PATH: /app/example
 
-			# Option B: Git mode - uncomment and configure these instead:
-			NAO_CONTEXT_SOURCE: git
-			#NAO_CONTEXT_GIT_URL: https://github.com/your-org/your-nao-context.git
-			NAO_CONTEXT_GIT_BRANCH: dev
-			# NAO_CONTEXT_GIT_PLATFORM: github   # override for self-hosted hosts
+            # Option B: Git mode - uncomment and configure these instead:
+            NAO_CONTEXT_SOURCE: git
+            #NAO_CONTEXT_GIT_URL: https://github.com/your-org/your-nao-context.git
+            NAO_CONTEXT_GIT_BRANCH: dev
+            # NAO_CONTEXT_GIT_PLATFORM: github   # override for self-hosted hosts
             # NAO_CONTEXT_GIT_TOKEN: ${GITHUB_TOKEN}
             NAO_DEFAULT_PROJECT_PATH: /app/context
             # Optional: clone only a subfolder (sparse checkout) — useful for monorepos

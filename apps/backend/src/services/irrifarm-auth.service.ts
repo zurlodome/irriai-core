@@ -111,7 +111,7 @@ export class IrrifarmAuthService {
 }
 
 export function createIrrifarmAuthConfigFromEnv(): IrrifarmAuthConfig | null {
-	if (env.IRRIFARM_AUTH_MODE === 'disabled') {
+	if (!env.IRRIFARM_AUTH_MODE || env.IRRIFARM_AUTH_MODE === 'disabled') {
 		return null;
 	}
 	if (!env.IRRIFARM_BASE_URL) {

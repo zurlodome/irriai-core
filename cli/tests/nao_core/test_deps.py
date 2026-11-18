@@ -1,6 +1,11 @@
-import pytest
+from importlib.metadata import requires
 
-from nao_core.deps import MissingDependencyError, require_database_backend, require_dependency
+import pytest
+from packaging.requirements import Requirement
+
+from nao_core.config import NaoConfig
+from nao_core.config.semantic_layer import SemanticLayerConfig
+from nao_core.deps import MissingDependencyError, get_required_extras, require_database_backend, require_dependency
 
 
 def test_require_database_backend_uses_public_extra_for_shared_ibis_backend(monkeypatch):
@@ -22,7 +27,7 @@ def test_require_database_backend_uses_public_extra_for_shared_ibis_backend(monk
 
 
 def test_missing_dependency_error_keeps_extra_brackets_in_pip_command():
-    """Provider extras must keep [name] brackets — callers escape only at render time."""
+    """Provider extras must keep [name] brackets â€” callers escape only at render time."""
     message = str(MissingDependencyError("anthropic", "anthropic", "for Anthropic LLM provider"))
     assert "pip install 'nao-core[anthropic]'" in message
     assert "uv pip install 'nao-core[anthropic]'" in message
@@ -41,3 +46,17 @@ def test_require_dependency_raises_missing_dependency_with_extra(monkeypatch):
     assert "pip install 'nao-core[anthropic]'" in message
     assert "Underlying import error: anthropic" in message
     assert isinstance(exc_info.value.__cause__, ImportError)
+
+
+def test_nao_core_declares_packaging_as_core_dependency():
+    """ibis SQL backends import packaging, but extras like ibis-framework[mssql] don't declare it."""
+    core_requirements = [Requirement(spec) for spec in requires("nao-core") or []]
+
+    assert any(req.name == "packaging" and req.marker is None for req in core_requirements)
+
+
+def test_semantic_layer_config_requires_semantic_layer_extra():
+    config = NaoConfig(project_name="p", semantic_layer=SemanticLayerConfig(manifest_path="m.json"))
+
+    assert "semantic-layer" in get_required_extras(config)
+    assert "semantic-layer" not in get_required_extras(NaoConfig(project_name="p"))

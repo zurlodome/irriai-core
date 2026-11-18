@@ -1,0 +1,948 @@
+{
+	"forkCommit": "e15ecc06377dca2334268528f10817c844328265",
+	"description": "Published fork migration history to preserve during upstream integration. Hashes normalize CRLF to LF.",
+	"dialects": {
+		"sqlite": [
+			{
+				"idx": 0,
+				"tag": "0000_user_auth_and_chat_tables",
+				"when": 1768388391105,
+				"sqlSha256": "f07ee8e2c4c47e7a9873f2acfb4314bbce42f331dee4eb7de20de6956df7782b",
+				"snapshotSha256": "b6ece20f8726b27187e44ab5a7af3769cd50f11f032eec3f40b3d92ff306e57f"
+			},
+			{
+				"idx": 1,
+				"tag": "0001_message_feedback",
+				"when": 1768493382221,
+				"sqlSha256": "e1719fbcdbb4514483b66c8bdd1cda23587c86cb17f6b9373654dfa27b48d443",
+				"snapshotSha256": "337e7ed9d1670d57b865c34e5ddad4f54014a6c569af363e60e7b4f5092fe58c"
+			},
+			{
+				"idx": 2,
+				"tag": "0002_chat_message_stop_reason_and_error_message",
+				"when": 1768552721702,
+				"sqlSha256": "263d2ecf63a1ce84eb893f2cc6123e44f7f600054c70dbcab05123b21aea6af4",
+				"snapshotSha256": "4ff48973cfbb036a1c3bb3d71bf85654ed04750f148e42776b9439cb22105536"
+			},
+			{
+				"idx": 3,
+				"tag": "0003_handle_slack_with_thread",
+				"when": 1768561598427,
+				"sqlSha256": "fbd6cbfb3be47acaca41aa66d93d589267b2979ae2c0140caa52c9ccd2926bdc",
+				"snapshotSha256": "9691b9753ecc2395044cc5e21c9a573426fb9fce206125e7c5d5e8e894e6afc7"
+			},
+			{
+				"idx": 4,
+				"tag": "0004_input_and_output_tokens",
+				"when": 1768817979545,
+				"sqlSha256": "0f3bf074e883c9d99b9bdcf676fb87809ea3ba2ca8287b3b23edc4a7f5762329",
+				"snapshotSha256": "1b223e49e648bd2e369f83512232e8176536af25248e9dfa251f2a386b23a1ef"
+			},
+			{
+				"idx": 5,
+				"tag": "0005_add_project_tables",
+				"when": 1769163991907,
+				"sqlSha256": "0f249c92ecb55399fec280b799a559bec15e51f3aeb7c807b66153545b85f300",
+				"snapshotSha256": "c0806336ed7a940e4ff585b665cf180298543b77f4d323ca1c10489f0a195e3f"
+			},
+			{
+				"idx": 6,
+				"tag": "0006_llm_model_ids",
+				"when": 1769301411587,
+				"sqlSha256": "05f64e0b1bd0a239f5bc5e09e18c62bd04dea41b7dcc18d0b1c67d85bfa172a7",
+				"snapshotSha256": "f6ffa1653718d45fa4b4c86f9c8622233be3da1125612bc6cb86b4b8cfcc1f01"
+			},
+			{
+				"idx": 7,
+				"tag": "0007_chat_message_llm_info",
+				"when": 1769686400000,
+				"sqlSha256": "04dc547fad30a68a55c043fca8645b162cd33d13ced73d1fc3c94eca37373968",
+				"snapshotSha256": "dffc18f697f5f7ae7a5d90d95827f1e7d583508b1d491a8e06fc9089ce825dec"
+			},
+			{
+				"idx": 8,
+				"tag": "0008_user_password_reset",
+				"when": 1770129133018,
+				"sqlSha256": "c5f857e83e046d8e97f70e20abbe86c44d81e414af0e93a40f62e861dd64a330",
+				"snapshotSha256": "cfca6ddabbd835b00e8f6c41f248e35d5821fb1a26ff768563af9c7233ac8b43"
+			},
+			{
+				"idx": 9,
+				"tag": "0009_organization_level",
+				"when": 1770285799418,
+				"sqlSha256": "a7651b65cdc08b8085c8b948d56cdb2ccbef5247b133f0a91ba7910e45f6e434",
+				"snapshotSha256": "0c0f16ae01bdbe51da8dadda4ae99a45ebb12145afdf6c250c52b3dec8d30820"
+			},
+			{
+				"idx": 10,
+				"tag": "0010_saved_prompts",
+				"when": 1770381609572,
+				"sqlSha256": "f426c50092712ceca4b60f9d0f5b3212b482ca7ef29399d3efd89f44fbe4420e",
+				"snapshotSha256": "9f1dbe08622e66e038e71fcdd2305989fac60b7e221b6c8bb906671c3c1b163c"
+			},
+			{
+				"idx": 11,
+				"tag": "0011_add-experimental-agent",
+				"when": 1770819225942,
+				"sqlSha256": "88ede79869fdf3361763a64f69f66cef089ab9a7c87884efee1e7fc55daa9680",
+				"snapshotSha256": "a9f288a53a68107e2de2b74604106bfa6f6021f0a52b089e5e26fb53d28b549d"
+			},
+			{
+				"idx": 12,
+				"tag": "0012_chat_message_metadata_and_tool_raw_input",
+				"when": 1771512415648,
+				"sqlSha256": "c59c80f614c3fc9e63a81cbcb33b970047ab09ca435340b252d7d898d67f30cb",
+				"snapshotSha256": "412ceea88212bbda88b534981457773537d393759e53b95e1b52f65b50751881"
+			},
+			{
+				"idx": 13,
+				"tag": "0013_agent_memory",
+				"when": 1771575705677,
+				"sqlSha256": "e71fb3056ede9e6ec3cf9e65a1be949c28fad7e7fba6c8572deb99e33910a0ff",
+				"snapshotSha256": "75fe1ca0a10b133d6713d7f29576e4f1e76184400efa0d14a2c15c935b23879a"
+			},
+			{
+				"idx": 14,
+				"tag": "0014_add_enabledMcpTools_and_knownMcpServers_to_project",
+				"when": 1771591511059,
+				"sqlSha256": "fba62db3ac4289c0160de87764d856bb48dc09480b49d2bbb4ef9e9213be8934",
+				"snapshotSha256": "c0b0e1ec6a2080c7179e21a1c37cd99773e3f3ad8014da2d3c936eb6bd542fc8"
+			},
+			{
+				"idx": 15,
+				"tag": "0015_user_memory_enabled",
+				"when": 1771614350511,
+				"sqlSha256": "0dfd2bf6d3db2d50f9aa802e82058f8bd73569e5a6eb04e67dd5cbd39d926428",
+				"snapshotSha256": "402b74e2234c58ec151a6f273ee357c9299e3775e309fa0746c6f779b49d36a4"
+			},
+			{
+				"idx": 16,
+				"tag": "0016_chat_message_superseded_at",
+				"when": 1771694141518,
+				"sqlSha256": "80812fe8fae19083c5346894807366ac6b0cb18fec55ab4e09e4aae17e889a40",
+				"snapshotSha256": "adeae6e5b5175f7e2b7c42303524f0d81e889b0e6eeaa169e343515d891a78f3"
+			},
+			{
+				"idx": 17,
+				"tag": "0017_llm_inference_memory_superseded_by",
+				"when": 1772031581593,
+				"sqlSha256": "af90dae0887890ca1953c0cd077fe46198b89f0270fe8d2be88e6ee842b1b8b1",
+				"snapshotSha256": "94267d76f24362a17e5e73d1e742341bf976b0697e7e2f847b0d4da5fae80e40"
+			},
+			{
+				"idx": 18,
+				"tag": "0018_added_message_part_chart_image",
+				"when": 1772124770677,
+				"sqlSha256": "8bedbf5d707ba1c271fd69a663227b11936e6c77a8b062d3ccc7b79ac02510a6",
+				"snapshotSha256": "e60bc2c976201f01474f226adbe91b0fd90aa041d6e70f899f109d69a6608300"
+			},
+			{
+				"idx": 19,
+				"tag": "0019_add_stories",
+				"when": 1772144197644,
+				"sqlSha256": "ff283b5e4d8bbecf9e0e96649497f8f6a4b8b780025816826d1fe544e37d96ee",
+				"snapshotSha256": "d9647430586d283089fcb40eef7b7e7151c2630eae89584cb444c99520ff4e98"
+			},
+			{
+				"idx": 20,
+				"tag": "0020_bedrock_fields",
+				"when": 1772640831692,
+				"sqlSha256": "f6a5d9b580b2b1610c58131a1628b4080a0228966bd9f072c868de63af4c7609",
+				"snapshotSha256": "c5029ab3b017bb57f4fefdd176daf9eb2163aa1fe3f1b702edecbae78ef340c8"
+			},
+			{
+				"idx": 21,
+				"tag": "0021_add_source_chat_message",
+				"when": 1772702832964,
+				"sqlSha256": "82a28749863c0a34a6cb6d45e1c56e2b80368c7a4142453795ba1223846e292b",
+				"snapshotSha256": "c91daab0dc59acd0258c2c36e842f71b3184c5b43a4583a25f59617f77d1aea1"
+			},
+			{
+				"idx": 22,
+				"tag": "0022_add_slack_provider",
+				"when": 1772706229518,
+				"sqlSha256": "91a7119ae60c35690e5aefb7b072a8fce1ff0244326af382813583d4d2a58571",
+				"snapshotSha256": "ae908c2bac441dba5b35d52fbfc489e2ee07d9d5a0c0873324a7d837b0f46541"
+			},
+			{
+				"idx": 23,
+				"tag": "0023_added_microsoft_teams",
+				"when": 1773133917020,
+				"sqlSha256": "b2014276bbe2b19881c04fb4724108dfff37c93a40cc0d70bc38032f71ae460f",
+				"snapshotSha256": "15ad3e50e08e26b22bed3ed4e315525e75a5db722ea3f91958fd8344a834c0da"
+			},
+			{
+				"idx": 24,
+				"tag": "0024_add_favs",
+				"when": 1773338645081,
+				"sqlSha256": "664808f2788beb675f7d7694b78907cd14d4531a25c4566255fc05f9c0ea6e9d",
+				"snapshotSha256": "71577644eb5e1820aa2d5a72345b8f37578cc90d75ddb298157793ab279f351b"
+			},
+			{
+				"idx": 25,
+				"tag": "0025_archive_stories",
+				"when": 1773740147271,
+				"sqlSha256": "d3462d61bb9054d2646d52de1ca598be960d3d9701d57ca016c048411846c9fe",
+				"snapshotSha256": "83069cf5394d60f5daefb77da1d0148743cc4a15967343b16b0ca6e32c24a92f"
+			},
+			{
+				"idx": 26,
+				"tag": "0026_add_log_table",
+				"when": 1773740147400,
+				"sqlSha256": "257f10fc7c088abec6cac93d0a721fa716de280155f508a173445ce42e8e2507",
+				"snapshotSha256": "c70a1d9b5faa2beff2f16c9d2a25d14eb7bd5d0a8842540836b74e9ee81d6087"
+			},
+			{
+				"idx": 27,
+				"tag": "0027_add_shared_chat",
+				"when": 1774013997070,
+				"sqlSha256": "6cf559fe274c89ffd92b806d56552d0bfa2232ee4356a84e71e79b87c44480d2",
+				"snapshotSha256": "663c0392f3898c5f99c31cd26d8486a352e6d2b027671f270179272ed2b97520"
+			},
+			{
+				"idx": 28,
+				"tag": "0028_add_telegram_channel",
+				"when": 1774262217065,
+				"sqlSha256": "54b69775de018f9fcc96d6d2424218d7668217f7608606cf1a074bd62c86f266",
+				"snapshotSha256": "65921cbd120b6b330c0b17b76c11273bf1ac06721509f7ad5e3166bf50364fb8"
+			},
+			{
+				"idx": 29,
+				"tag": "0029_add_whatsapp_channel",
+				"when": 1774271885552,
+				"sqlSha256": "9302e4e04571c919a3ecb77cd46f0676ee8882414b5c2791ddc29401466f52a0",
+				"snapshotSha256": "de758d7e0333f6fba9580880679e22a2cb6e1ab5d12a24c196029b0a41144cc8"
+			},
+			{
+				"idx": 30,
+				"tag": "0030_add_chat_soft_delete",
+				"when": 1774539602329,
+				"sqlSha256": "10347e591ed3e8cdf502a1b065ee4eb6d7035ad26098289b1f79a30371bf3243",
+				"snapshotSha256": "33a6096047eab0d2188a038570a052b5e6737d8c6a2db0fe0222905eaaaba0e6"
+			},
+			{
+				"idx": 31,
+				"tag": "0031_live_stories",
+				"when": 1774549788607,
+				"sqlSha256": "af2e02c41d60c0827822dd065a07b6ecfc436b4c0ef24a003a4200df5c357a14",
+				"snapshotSha256": "fac0d3ca1996b80839e2ffa730162671ffcba382b541b4ded40c1726ca70bc2b"
+			},
+			{
+				"idx": 32,
+				"tag": "0032_add_images",
+				"when": 1774873099155,
+				"sqlSha256": "44e25280d1a63e6640e890fea995894b7dd481a42eb6ba780a7613a64d2f541a",
+				"snapshotSha256": "12833f441b86c3c72b4524fd88528bf130fdd71094f22cfa41e2786b4b004e67"
+			},
+			{
+				"idx": 33,
+				"tag": "0033_add_whatsapp_links",
+				"when": 1775130177344,
+				"sqlSha256": "d2d4ad6dde402ea465c9f04bbed0113bff6d4e503b4967c3e7987d9ac4e37fba",
+				"snapshotSha256": "9d6a1fe01a841a5d446c30f4497dc5811d9a8eab64b780b7b797e5e4e5f9b705"
+			},
+			{
+				"idx": 34,
+				"tag": "0034_add_fork_metadata_and_highlight_chats",
+				"when": 1775132290056,
+				"sqlSha256": "94a6d2a589195883577999ec4e3c394189d9fa6efed89af4d2b054b7ec6c2584",
+				"snapshotSha256": "20d332bafb6e04049afc4e323fe5ab3b42095cbd90807a5374515b0fb8a81c21"
+			},
+			{
+				"idx": 35,
+				"tag": "0035_add_project_provider_budget",
+				"when": 1775740835280,
+				"sqlSha256": "d6d8f11708289cddd91089ae4e91d2d2c292d9d2014db64ef718aeb186fa9fa1",
+				"snapshotSha256": "bf3aa8a401d9afed9bf70724dae0485727a95b675d74ebfc8b6c0f217b327a68"
+			},
+			{
+				"idx": 36,
+				"tag": "0036_cloud",
+				"when": 1776187665191,
+				"sqlSha256": "0ed42e24103a8fd1359b081c778d5a73554ba17ee70690521a2b529597c58694",
+				"snapshotSha256": "36183a4df98a59ddca5f23e3d95e9b47626080743a64ea77e7e03d3a727cac49"
+			},
+			{
+				"idx": 37,
+				"tag": "0037_add_citation_column",
+				"when": 1776332018682,
+				"sqlSha256": "0a4a4c13c60e18150752209b95e4b1c118a81527299be69af2e3135d9d99835d",
+				"snapshotSha256": "13c30fa78f010d64215239e9351a9c8365976c39391a6dc8e3cc3b7ef4cb4cf6"
+			},
+			{
+				"idx": 38,
+				"tag": "0038_scheduling_table",
+				"when": 1777983465688,
+				"sqlSha256": "4b9db567cb8431fcc7a8edcc519a10160fd6e1773553bbaa9b03f0357416e9a3",
+				"snapshotSha256": "92e09012951808f9dd4740718cbdf4da8139f0978fb6f01b6bdd543a0ce411cd"
+			},
+			{
+				"idx": 39,
+				"tag": "0039_mcp_endpoint",
+				"when": 1778071303698,
+				"sqlSha256": "120816e70e912648800f5965561ed70dfc79f737f5a344e512cc61c8489197a6",
+				"snapshotSha256": "38d56572d0f3536754e6ca5c211e044b23ca1df818f2e08f2eba5f91c8ccba0a"
+			},
+			{
+				"idx": 40,
+				"tag": "0040_branding_config",
+				"when": 1778541532870,
+				"sqlSha256": "25632822bb107dd5ab03b59df6263d8c4012bc94519f7a59d7a7396a61dd44b2",
+				"snapshotSha256": "8fa83937e1a938975e665dd2836e1a40ed2e8956032dd0b05e10d1fef24994b5"
+			},
+			{
+				"idx": 41,
+				"tag": "0041_automations",
+				"when": 1779179529694,
+				"sqlSha256": "0a0fa5f54ce650b1d57548eed231016505ad362d27bf62cb20b29bece78ade6f",
+				"snapshotSha256": "410e590dd8a8d0cf5f7b9fcd9987e52efb0681152f627d89a6a177db55018de8"
+			},
+			{
+				"idx": 42,
+				"tag": "0042_mcp_query_data_and_chart_embed",
+				"when": 1779270683577,
+				"sqlSha256": "770daf54ce00b9869df6fcbb8a3dfcc179f87760afa15626753e5a163d52151d",
+				"snapshotSha256": "bd54d44d7b8f76d09c4c644064831af23c02f85eb080c2e874f72baece87fc9d"
+			},
+			{
+				"idx": 43,
+				"tag": "0043_custom-models-id",
+				"when": 1779278953215,
+				"sqlSha256": "98d3b822cf7730f2c8c5762225f6933b08fc65a9ebced8fe392c9750a1323de9",
+				"snapshotSha256": "182de273e9c966ca8ab4c83f77746c64188dc2eab855a29fb7d5b7c848312059"
+			},
+			{
+				"idx": 44,
+				"tag": "0044_activity",
+				"when": 1779815381971,
+				"sqlSha256": "6f55cf41efe81a0e984c78a9e823aff98d5304744862792c10aaadbe96c8f299",
+				"snapshotSha256": "2bfd0282ab86be737c196825b33e34680ffadd63e4991ed74d7af56b5929e8c9"
+			},
+			{
+				"idx": 45,
+				"tag": "0045_migrate_mcp_endpoint_settings",
+				"when": 1779815381972,
+				"sqlSha256": "b9cb2c15191416da7b6180c6d0a9108168f68d97c3bc66f62fb700c92caccacc",
+				"snapshotSha256": "4eafac60fa09c0cb187d3d6053f23a26a8846aeda5f8c2419177c919cd2f2e15"
+			},
+			{
+				"idx": 46,
+				"tag": "0046_folder-management",
+				"when": 1780403968988,
+				"sqlSha256": "465d44b76410823d156c8be74e533f64f33b50ae4952437e0712b88d3e0fd9c3",
+				"snapshotSha256": "2361f1cc03e192801a656442ac6eb035f4b6d6706f03a8925a29381f4977b9c1"
+			},
+			{
+				"idx": 47,
+				"tag": "0047_recommendations",
+				"when": 1781092642363,
+				"sqlSha256": "4f2a4264b70616473b09081de1216f9a40a7d2660b02f1c68c657c862d4edbce",
+				"snapshotSha256": "7fb08576c7dbd7d8ad70a8db6ee479cfd482d8b22b1711709cf6b2076349ca0f"
+			},
+			{
+				"idx": 48,
+				"tag": "0048_user_preferences",
+				"when": 1781709777049,
+				"sqlSha256": "73a13705b9af751af62b9d286ed6d54546d9b7aa7f4538e85b09b34eee586628",
+				"snapshotSha256": "172eb3be73d67221a106f8f4c150b63e986e56416a1ccc76221eb0d336a1729b"
+			},
+			{
+				"idx": 49,
+				"tag": "0049_add_display_settings",
+				"when": 1781711312936,
+				"sqlSha256": "05647fa20e84d1317e13bcce2003540e8dfc8989d4590c53f1d7d73cc1bc49a4",
+				"snapshotSha256": "b5937198138404914c6c4c12c96143e8ba9912ff48bf8e539395ee867eb70e7d"
+			},
+			{
+				"idx": 50,
+				"tag": "0050_add_message_version_group_id",
+				"when": 1782226391713,
+				"sqlSha256": "0cae4de8e51ccc72c416070edcd188e06e83ddf92ea7bae37991a442604f3cf6",
+				"snapshotSha256": "5c5350e94d75995211cfd7b8f9d7515dc40d2235d442225f765901b478d2aaa8"
+			},
+			{
+				"idx": 51,
+				"tag": "0051_analytics_event",
+				"when": 1782390602602,
+				"sqlSha256": "dba46f6aff464acba54374fd0f9181b210a27b29a99f232e8cdcfbc59c16f343",
+				"snapshotSha256": "6473fcc6279b60be86e57ecccc7c61763f03b44a27955eb18a9ebd7b700d7f9b"
+			},
+			{
+				"idx": 52,
+				"tag": "0052_add_brand_color",
+				"when": 1782391309531,
+				"sqlSha256": "88e8f0fb64001137459d86762995c884b2cc95422e69c5198adab088c85235e9",
+				"snapshotSha256": "88e760c2b05085caf0b2491f317aaae4b029fd501b1ece08a61db6b051ed9b5e"
+			},
+			{
+				"idx": 53,
+				"tag": "0053_new_mcp",
+				"when": 1783082672684,
+				"sqlSha256": "51b14f012bc1223b97b562c25bdf93a7f121f88efd806e5cee329fd8bd9ecf65",
+				"snapshotSha256": "b26c65e440daa9ff6c7fd57e7351bc328fd3840e3dbc9b484451062a16c57cda"
+			},
+			{
+				"idx": 54,
+				"tag": "0054_webhooks",
+				"when": 1783278706989,
+				"sqlSha256": "6401937f20454041100bd52e489b34be9e0c3a82e01fbd62598698464f25be29",
+				"snapshotSha256": "a09c760e8ede5c47aab306ac705d9924b0ffc149ba8c834897bc94ea6d89d46d"
+			},
+			{
+				"idx": 55,
+				"tag": "0055_add_gitlab_token",
+				"when": 1783321426739,
+				"sqlSha256": "8f344ff2df1d4819c9244055cc6d95902f5dfafa7add192566cc3aa0abfce73f",
+				"snapshotSha256": "2372a9bdb86ca98f5e4d91b531efaf4de3b39c30a4b7d1edc148137396c71f03"
+			},
+			{
+				"idx": 56,
+				"tag": "0056_model_settings",
+				"when": 1783697772869,
+				"sqlSha256": "967b76ad4ef7bc975180f69dcf26f76ace15ff91c82ae9bab78ca2214e29c7f7",
+				"snapshotSha256": "607323dec510490b7c7d8ebee748d47c388c5035eec3a8554ea07659eb69c547"
+			},
+			{
+				"idx": 57,
+				"tag": "0057_map_settings_and_map_embed",
+				"when": 1785435188287,
+				"sqlSha256": "5a1b665464413fdde6df3a8c61957c42427061c2f93fdf8647759d6ad6527e19",
+				"snapshotSha256": "09a7e6c729e2167b46bc8eedf7fb25471e72394a630e84137632c629e6662a6f"
+			},
+			{
+				"idx": 58,
+				"tag": "0058_add_category_rootcause_fixtarget_to_recommendations",
+				"when": 1785931695088,
+				"sqlSha256": "ab698ad681b2d8150d5f56b0855fdbe8c69749b42e8a63f88585d3f20995f9d9",
+				"snapshotSha256": "c9a8c1ce151d840d4afd3a6d65f80f15ea1fbc051ba4f4cc6ba11dc7b09e7378"
+			},
+			{
+				"idx": 59,
+				"tag": "0059_per_user_budget",
+				"when": 1786094927201,
+				"sqlSha256": "0903a2d804d11442fd174aeccbfc0ac707afe2ee6cca5bf7f5a0a9e3e58bce96",
+				"snapshotSha256": "03f688a1b3399eb86d9294fbce05bb66cbf23fa4c3cff6912887f9d64fc1c467"
+			},
+			{
+				"idx": 60,
+				"tag": "0060_context_branch_ownership",
+				"when": 1786362945820,
+				"sqlSha256": "cb12b717ce7ec0507bce9425642fd6a765861e4f112636f76afe7ecd5652730c",
+				"snapshotSha256": "af73e62d54b9444ea1e8d72d7aa5b08b93dd8d7737397cb875bd08a34ce67637"
+			},
+			{
+				"idx": 61,
+				"tag": "0061_context_branch_review_request",
+				"when": 1786371598947,
+				"sqlSha256": "ce887ea21e47216ffc232ca0dd10533c7ff9d0529de3615482c6a3a48892670c",
+				"snapshotSha256": "a26c710fc3cd9a03d0268c23ce600c92a4f95065f3a76fd387de53f79c2d52f7"
+			},
+			{
+				"idx": 62,
+				"tag": "0062_storage",
+				"when": 1786544583354,
+				"sqlSha256": "d4c239df284406ca3c64d8936a7b0d23edecbbfb032ae512f7165273de923f43",
+				"snapshotSha256": "b74a9f7f961772e675eee1f8a928ad1f8b8317d69564bd35070f9b7f93a08bee"
+			},
+			{
+				"idx": 63,
+				"tag": "0063_default_models",
+				"when": 1786610518650,
+				"sqlSha256": "0c8d4967cc1b2ff231111a2ded23a8e5e7c1f3e191204bff088fcd53dee83064",
+				"snapshotSha256": "d07e96a8ee3ba14b238af9cc305c4d13632856392657776e1347121e576a2163"
+			},
+			{
+				"idx": 64,
+				"tag": "0064_context_assets",
+				"when": 1787598597648,
+				"sqlSha256": "bcd0a27939a43d0a67af24960d1e55865a438a7805562ab556fbe40f742c1c1c",
+				"snapshotSha256": "a2de5dd329bd0ca57b853392ab5de92b7a4a21096fb14b736186582dc85e4b42"
+			},
+			{
+				"idx": 65,
+				"tag": "0065_irrifarm_identity",
+				"when": 1787867975497,
+				"sqlSha256": "ade9a6836f54231470c890dfb6cc4c84beb08df551a4069eb275e445f42fe5f3",
+				"snapshotSha256": "324cc3c2e6a6655943bf7e4a78e2248fda0403f265d5f6645c09aa4a3386ab72"
+			},
+			{
+				"idx": 66,
+				"tag": "0066_add_mattermost",
+				"when": 1788763508597,
+				"sqlSha256": "5a1f5868215c07c1d632f9097dd5114044016b9a269e45db415099e27b279477",
+				"snapshotSha256": "e7d733d862fdab693bc579edb2b3b4938902932374c40f1dcf30de3e5271b340"
+			}
+		],
+		"postgres": [
+			{
+				"idx": 0,
+				"tag": "0000_user_auth_and_chat_tables",
+				"when": 1768388561542,
+				"sqlSha256": "5043b1bcd69010a3de662996f8780799e0a0fe9cb64e80d9931157936368352a",
+				"snapshotSha256": "f1b57c0d08da92ce0877668f3d66d57126f9c4c84f28d7ff5749687b4d5d9e5f"
+			},
+			{
+				"idx": 1,
+				"tag": "0001_message_feedback",
+				"when": 1768496717318,
+				"sqlSha256": "3964b20c2001c0ceb196711ce6c0b7e305e69a5d51ca1bc20d11b8b3feca094e",
+				"snapshotSha256": "a0a45ca341845927ba3d7af582107905f3ac78da440379c0fd7fd4318752a636"
+			},
+			{
+				"idx": 2,
+				"tag": "0002_chat_message_stop_reason_and_error_message",
+				"when": 1768559969318,
+				"sqlSha256": "40ea792c170140646efa8705a1a6936671fda9bf8cf6853639d2bd314390c7b6",
+				"snapshotSha256": "3f844363914c82a326ad4f971c3e8392839813db92c9492e5eea3660aaa8a0c5"
+			},
+			{
+				"idx": 3,
+				"tag": "0003_handle_slack_with_thread",
+				"when": 1768561547301,
+				"sqlSha256": "e331a9015f60e7c9a832431b2d71ce77759cecf64de8aef902b567f39cace850",
+				"snapshotSha256": "b76545dc427e07f7399e49cbfef89f519fccaed05b682defb3156d0599bbb194"
+			},
+			{
+				"idx": 4,
+				"tag": "0004_input_and_output_tokens",
+				"when": 1768817988521,
+				"sqlSha256": "f08b3c87098d60bf9da58f6bbc2c0918a4f158e40bed3f2cf541b8806cfa1345",
+				"snapshotSha256": "02c1561f742dd56b3e9c577073df5952d67c5849ef869364a58ff833d5f8598e"
+			},
+			{
+				"idx": 5,
+				"tag": "0005_add_project_tables",
+				"when": 1769164031408,
+				"sqlSha256": "8fdfa5d32e784a10aa0a8f23643dca516c205f7d5b13729a9e9ca784678dc3e4",
+				"snapshotSha256": "273ce077a78a791bd83b51361cde7df6f39cbaa4788d595f2b7415d463a3b0c6"
+			},
+			{
+				"idx": 6,
+				"tag": "0006_llm_model_ids",
+				"when": 1769513746509,
+				"sqlSha256": "ec103cd0dfc47ed94894f1a09c9908f6fa0d52439ad86bb619e44817902055e2",
+				"snapshotSha256": "c6043849c69909c8865b6e41a54c972f46d31fe728defba361c9ceab48c2e19a"
+			},
+			{
+				"idx": 7,
+				"tag": "0007_chat_message_llm_info",
+				"when": 1769686400000,
+				"sqlSha256": "3b4f279058998f5747fa47430ac38a5ff66c2fe931989dbadea5c841506631fb",
+				"snapshotSha256": "4b3652a5313c1678ae6b461493803ebdc4129bab52e9530caa2964b5fc551a96"
+			},
+			{
+				"idx": 8,
+				"tag": "0008_user_password_reset",
+				"when": 1770129113295,
+				"sqlSha256": "2899b06f5aeceeb32b3805ebf394d8d986365534f61b8a819b0c723eaf1022eb",
+				"snapshotSha256": "d333fd19283dad6ab99395119624cc20ba93096fed7a7098af1d7040532faf9d"
+			},
+			{
+				"idx": 9,
+				"tag": "0009_organization_level",
+				"when": 1770285870442,
+				"sqlSha256": "3059fcf4ecbe8c67a3b42deecba8b83c1381dd5858d611db03cc76b51a552a25",
+				"snapshotSha256": "3d9191b2a3ca4d790ea2ecd8fe06a979ef6cfab84da59e88dcaf5d6147c1c903"
+			},
+			{
+				"idx": 10,
+				"tag": "0010_saved_prompts",
+				"when": 1770381601080,
+				"sqlSha256": "7ce086d098d63c4779aedaeb645cb1515cfa8e55893492a0d498bcb7865f9f1a",
+				"snapshotSha256": "241affb9f5e4e8d0edbab0a39745acac427b71f5150afe4dd1c01e344be95b18"
+			},
+			{
+				"idx": 11,
+				"tag": "0011_add-experimental-agent",
+				"when": 1770819262591,
+				"sqlSha256": "1c996940163f5b2733653141cf3d5af955587a6acbd7656db28ff81a52a51c77",
+				"snapshotSha256": "0f4c01dee2b970bc277f923b269ae1eed2c87b89bd3df54de6e20d2017cb4ab7"
+			},
+			{
+				"idx": 12,
+				"tag": "0012_chat_message_metadata_and_tool_raw_input",
+				"when": 1771512435851,
+				"sqlSha256": "566945924fcfd1aad7c700c5605f8c535aa242016179f3100bd77e9b834a26f4",
+				"snapshotSha256": "10a2528879cfc270f028c2f2c973559aa0c67fa69625a1c91cc0bc564017a779"
+			},
+			{
+				"idx": 13,
+				"tag": "0013_agent_memory",
+				"when": 1771580427546,
+				"sqlSha256": "982990f66614548aab6b263df3fcb76e9583f6382e9de7e06be37bcb290bb952",
+				"snapshotSha256": "b8c201241ff1b230dcd9d8ce8790e255d0ee44ab339344d9f887af9bc39612e0"
+			},
+			{
+				"idx": 14,
+				"tag": "0014_add_enabledMcpTools_and_knownMcpServers_to_project",
+				"when": 1771591518084,
+				"sqlSha256": "9e32fc6b857cb22e0dd6ab8e735ddf12fc11e5f36fcea1a3b16d0080d67fa9c2",
+				"snapshotSha256": "c683ff2f9414665c575624ea19db148e4fdfaa931cb70f5f4c655d644506fde6"
+			},
+			{
+				"idx": 15,
+				"tag": "0015_user_memory_enabled",
+				"when": 1771638632252,
+				"sqlSha256": "108992bb7b24cb7367f48539a74a1a0f66d3391bfe65f66e2eb5959d29bff3a8",
+				"snapshotSha256": "106eb93d3bdaffb5bda8882e20ee1c60f944a069fa8bee9eff2d721850f985a0"
+			},
+			{
+				"idx": 16,
+				"tag": "0016_chat_message_superseded_at",
+				"when": 1771694145337,
+				"sqlSha256": "63d7d5ac471b5c58f4b4bb812801c431936d59d471f53a16a8aae25f1979a758",
+				"snapshotSha256": "4e7ce2d6d1e56919ec20cc46586f1db86e53bca9366977afad28be79a62a2e2c"
+			},
+			{
+				"idx": 17,
+				"tag": "0017_llm_inference_memory_superseded_by",
+				"when": 1772031603242,
+				"sqlSha256": "db273be091981deb2a4a91d357768b6e36dbb969ddd481765756ea49a42a1cff",
+				"snapshotSha256": "c9220084070af7494edc188a1177e1dbb628939e97e01e2a5e2b4caf873ef6b2"
+			},
+			{
+				"idx": 18,
+				"tag": "0018_added_message_part_chart_image",
+				"when": 1772124793182,
+				"sqlSha256": "952d6d811e395b9e9bf0b3b4afb3f030614edc5eb7eafabd0ff3bf20e071ff8c",
+				"snapshotSha256": "4da11f85a1e4e6bb74cc59b9da31d9082b8d6d96368aa1088c87a5406c59775d"
+			},
+			{
+				"idx": 19,
+				"tag": "0019_add_stories",
+				"when": 1772144278927,
+				"sqlSha256": "1670b8091527226c77801b2d84148eaa1dcdfd79c82d36d63a25696ae112e1fa",
+				"snapshotSha256": "636643b45e6b7a32e6fe8672f6b876355ca274bc52b2014a99bbd779abd1d8d7"
+			},
+			{
+				"idx": 20,
+				"tag": "0020_bedrock_fields",
+				"when": 1772650051523,
+				"sqlSha256": "6f8f736e79179a371d2cf71c6dfa23469fe4ee18716f6ca4224618d66e2dd3e7",
+				"snapshotSha256": "26db0185f8d48e7348165b6beecb61e59b62fc725fd397c2941058c89bed4aee"
+			},
+			{
+				"idx": 21,
+				"tag": "0021_add_source_chat_message",
+				"when": 1772702845282,
+				"sqlSha256": "82ec66503a46ea6161613c230c399eb59aa9ddc21ecc8d0c15c10c90bdaa6f37",
+				"snapshotSha256": "d1d6f89f599457b6d5935f3ff96232c474c45ebe6d53288a983baadffc1d233d"
+			},
+			{
+				"idx": 22,
+				"tag": "0022_add_slack_provider",
+				"when": 1772706637768,
+				"sqlSha256": "9d81f23f696197e84eeb845a1ba4b897e4b0a6ade70d234d385ee080c11aebae",
+				"snapshotSha256": "dc2976319c1023b990dc043f6946f69564fcfebaeb0520699dc148aab2b97e08"
+			},
+			{
+				"idx": 23,
+				"tag": "0023_added_microsoft_teams",
+				"when": 1773133940694,
+				"sqlSha256": "44288cca464c0cbe2917f0566fb307648fa61fb3ca4f0c73ea60520fb671bd53",
+				"snapshotSha256": "5c4d7dfe74ae031d695dc65e4f64f7908f3f87624e1b9b54de75c4f6d0a3bfa2"
+			},
+			{
+				"idx": 24,
+				"tag": "0024_add_favs",
+				"when": 1773338861347,
+				"sqlSha256": "c6516692a5a667e700ec01f7cce36d7123b963528487781bfebb5c191d66c3a9",
+				"snapshotSha256": "92e3c931488972edc2e25363250bde29a5e55cedb0adcefe1452c04369a195a9"
+			},
+			{
+				"idx": 25,
+				"tag": "0025_archive_stories",
+				"when": 1773740178731,
+				"sqlSha256": "5cf7bef3647504b6351c92821cddba6e22c68c0343a2f522a921e1351ea463d8",
+				"snapshotSha256": "2b761cb39425d3a2e8fde9e6d56987a6064ad723848937ce07779e308c61898c"
+			},
+			{
+				"idx": 26,
+				"tag": "0026_add_log_table",
+				"when": 1773740178800,
+				"sqlSha256": "76f79cc1c52d8d143bb30fce5d464a0587a8b37fce94ea3778923db8586c61ae",
+				"snapshotSha256": "cdc44d0c37ce1b562e89f516573990f71afa7c7b19a80dfd81b0e1e2b48346c4"
+			},
+			{
+				"idx": 27,
+				"tag": "0027_add_shared_chat",
+				"when": 1774014206198,
+				"sqlSha256": "aa7c13c373d176ac6596e3d5336776996373d14a608c44ca630f8330369f2bfe",
+				"snapshotSha256": "e749d29bdda9cb0571fc02fdc0879384bd82572c57ee150028767bc1dc6bcb36"
+			},
+			{
+				"idx": 28,
+				"tag": "0028_add_telegram_channel",
+				"when": 1774262249057,
+				"sqlSha256": "c33ce3d4003d39dc8a318fa2abf3e56b8dacfd01c8baaaa59faf58867cce948a",
+				"snapshotSha256": "155ee56e8a74240fb5e14879cf116b7a5515898c60bdd542b7e1c236a38c9571"
+			},
+			{
+				"idx": 29,
+				"tag": "0029_add_whatsapp_channel",
+				"when": 1774271895478,
+				"sqlSha256": "5b346cf3ee243c2b65068073bbe150c83570a7a6f9b16bd64228796cde4747a9",
+				"snapshotSha256": "2b737b1ee0845706967ce9e1d9523b9251d4c30d37bb0b404953bf00d2b3066d"
+			},
+			{
+				"idx": 30,
+				"tag": "0030_add_chat_soft_delete",
+				"when": 1774539613392,
+				"sqlSha256": "4c473e814508fde47d33fd543597622693be1bc61fe55e531acc880a88802d98",
+				"snapshotSha256": "e6b5dd41e628e5e7d568f1f34958809b10084f6a12d2a2aeb117c6318918f3b1"
+			},
+			{
+				"idx": 31,
+				"tag": "0031_live_stories",
+				"when": 1774549798905,
+				"sqlSha256": "f884d3c8a32006e6aa523e7aae6b75cadf346621bebb40c9012afd82286d2f0b",
+				"snapshotSha256": "95bf85bee9190627071f03440d922cafb52ef2adc9f2024bc9ed94f59ba62a89"
+			},
+			{
+				"idx": 32,
+				"tag": "0032_add_images",
+				"when": 1774866420517,
+				"sqlSha256": "afcad80082241c8c84f8e8e268e4fe94c8bea76ee01e04c1a6804c0c071a7480",
+				"snapshotSha256": "ad55e273b7132d059971a38e61a1074105cd6d47eb2dfdd48c7f09736d13a701"
+			},
+			{
+				"idx": 33,
+				"tag": "0033_add_whatsapp_links",
+				"when": 1775130177971,
+				"sqlSha256": "6583a1fd58049527ee9dc65f614f1b31c80b92721e6baf64246569901025f8b3",
+				"snapshotSha256": "94d2027a26ee2a90ec2680f9230cf9dbe75dd609dca099b00801f70b118c133f"
+			},
+			{
+				"idx": 34,
+				"tag": "0034_add_fork_metadata_and_highlight_chats",
+				"when": 1775132293619,
+				"sqlSha256": "1d3ced1bd205e96ffbf3c77eefd1ea02be44bebae4d1096d5348e133cb9bc5d7",
+				"snapshotSha256": "9ab878f6f6fc80c5e07751340b3504738de04366b5030090a0271148eac9d16c"
+			},
+			{
+				"idx": 35,
+				"tag": "0035_add_project_provider_budget",
+				"when": 1775740878738,
+				"sqlSha256": "a4bc02e9db3d723f13252ecf8d4f193f940947a197a98e415dbe9664b07570a3",
+				"snapshotSha256": "e15cba96ba7f1a23ea061b8bcaaf7bac4641849e85737ff48e943392aedd0bda"
+			},
+			{
+				"idx": 36,
+				"tag": "0036_cloud",
+				"when": 1776187674321,
+				"sqlSha256": "d978e96cd2e568198167c8942e7b3d12d6c8113cb6a1248ebcfa6c42f2c09f78",
+				"snapshotSha256": "ac7d8d73e8d0fc54b7a52c636b0436c66aa1cd948c92e0f5b4cabd274ac3851b"
+			},
+			{
+				"idx": 37,
+				"tag": "0037_add_citation_column",
+				"when": 1776332134291,
+				"sqlSha256": "d806c0c7f25527af4c3ec88f3e3a95fb833840bff6d18aee2dae56790baeecbd",
+				"snapshotSha256": "7c9c36a3ba2c5dea14905bb1d9b40455c0880604a7199ead1567024cbc89137a"
+			},
+			{
+				"idx": 38,
+				"tag": "0038_scheduling_table",
+				"when": 1777983477674,
+				"sqlSha256": "68d3e859b97edab6a8f8dd8410983d09fce3bf62daa18072e5124ceedbd94e10",
+				"snapshotSha256": "544d5d23bafb0c8a193d0cc8f254e938d0147b1b286298fed624bb71243afaa4"
+			},
+			{
+				"idx": 39,
+				"tag": "0039_mcp_endpoint",
+				"when": 1778071315178,
+				"sqlSha256": "871fdfc06fa48a681368add41aea031d18592cc35e888bf392bafc8ebd4d512b",
+				"snapshotSha256": "a1e6e8e1f656b47692ab1ff339486920e5f9a6fe1b16961b033a7b3ff561dc73"
+			},
+			{
+				"idx": 40,
+				"tag": "0040_branding_config",
+				"when": 1778541547672,
+				"sqlSha256": "76c4c28390620081b286e8526f4a53559589314362c2f6d8c7a6b442d666739e",
+				"snapshotSha256": "1ec6b177d55a5b495d0025e684e43ba4a70860b7cad117b19af75fac375b3155"
+			},
+			{
+				"idx": 41,
+				"tag": "0041_automations",
+				"when": 1779201882027,
+				"sqlSha256": "4ef461ef411607b89263a92fd555046b3a0429555f6e288390d08f8a07f9d471",
+				"snapshotSha256": "ec6f9a174ff12de6f0908a6a02dfa02b98837afb077a5f9d896a154b26a4d26c"
+			},
+			{
+				"idx": 42,
+				"tag": "0042_mcp_query_data_and_chart_embed",
+				"when": 1779270688350,
+				"sqlSha256": "53cca9aeef58830d6debc954dad6b2ccfd584efd3006818d646e143a8c67dc9f",
+				"snapshotSha256": "660a1eb6dc6fe4bdbc1d52a049470c2342ea5d35f20190b9c710f5311b3b0ad0"
+			},
+			{
+				"idx": 43,
+				"tag": "0043_custom-models-id",
+				"when": 1779278958357,
+				"sqlSha256": "27f378136d3b8a343942a98592e606f3274206fd42f6c2f4733f480663f52e15",
+				"snapshotSha256": "53df79d9810036ab3a0df2d6ec667cdb33db32799a3f8b53378592f499053abf"
+			},
+			{
+				"idx": 44,
+				"tag": "0044_activity",
+				"when": 1779815389972,
+				"sqlSha256": "85bd8d41f74c8807ff6ff25d07adfecae920c14b9dad45787c9685a2736834c4",
+				"snapshotSha256": "863d5233251459bce376b2d4de00ed56eb95e60d866463a3a236d50d46de0056"
+			},
+			{
+				"idx": 45,
+				"tag": "0045_migrate_mcp_endpoint_settings",
+				"when": 1779815389973,
+				"sqlSha256": "b853afffe4cac1f81bf31573366a331d2c9f2895760e2d4094b80998ca0e4344",
+				"snapshotSha256": "feccc883eb78ae8f0f7d9e9b4b963e86b2e1d323f971c800235198fcaa70a27b"
+			},
+			{
+				"idx": 46,
+				"tag": "0046_folder-management",
+				"when": 1780404033287,
+				"sqlSha256": "21efcadd0fc486b0380776bd12fabb1ed5ddea8436bdf43b450a54907c7ba8fd",
+				"snapshotSha256": "3e45a64b012477066c190757840f02737ab91f12a184b71d9564f87c6b370d9e"
+			},
+			{
+				"idx": 47,
+				"tag": "0047_recommendations",
+				"when": 1781092652332,
+				"sqlSha256": "57b673621e94e94c4a0ded009e972dc579fe2d2ca3b78906d2aed99a5cee36a2",
+				"snapshotSha256": "5a476b918be6b227e663b4231a0fb7ace41fdda5baac1afba5da203e7e9ff10e"
+			},
+			{
+				"idx": 48,
+				"tag": "0048_user_preferences",
+				"when": 1781709786441,
+				"sqlSha256": "2f6766721360910f4b75d78cb40aa3846d29f2dc4ce07e1d766b72167b232de0",
+				"snapshotSha256": "a550a9711714705dd84ac8909202c302be8290847bfda0913769c346e13d9e08"
+			},
+			{
+				"idx": 49,
+				"tag": "0049_add_display_settings",
+				"when": 1781711321926,
+				"sqlSha256": "b9e8ca511826aebda3b6ceb37a21ec2012be335b666cb7da3992d5bd782898aa",
+				"snapshotSha256": "ad4fd03939024163e2c59776cac234aefaa8259f43d5ffa50fec0265043a681a"
+			},
+			{
+				"idx": 50,
+				"tag": "0050_add_message_version_group_id",
+				"when": 1782226396815,
+				"sqlSha256": "be3fe78dbb88e6c5568cf0246edf0ae8d90a36f241b4c54486cabdaa04c1c5ca",
+				"snapshotSha256": "05d4e33d59a4163bd0d4752f5bc596bba7de4293f1f1e44c511d0572fcdcb779"
+			},
+			{
+				"idx": 51,
+				"tag": "0051_analytics_event",
+				"when": 1782390613565,
+				"sqlSha256": "a7d4f75a8cb74e99401c713039b82f4ce0a97c386e0252171ff14160e5455d4d",
+				"snapshotSha256": "4f191e8fd1a1f44e131235e7f496adb1bb5e335345491955bb719cfefa734296"
+			},
+			{
+				"idx": 52,
+				"tag": "0052_add_brand_color",
+				"when": 1782391314716,
+				"sqlSha256": "e84d74495b67b007ed9d7190e59f5f8d5b5208ffd2a0567ddba33268a558989c",
+				"snapshotSha256": "b24a9a9f9b305ad09383f9eaeec24fe13c05c32d0ab3afe0473ed1c0dcdf7aaf"
+			},
+			{
+				"idx": 53,
+				"tag": "0053_new_mcp",
+				"when": 1783082678974,
+				"sqlSha256": "abba07c2028ae8ef532e4fe006de85a95f2929a7518ac821d80b64933e604fc7",
+				"snapshotSha256": "645d0609e92ed10792bc634f1e65cee6312dc23ed29146241f038a3150923a1a"
+			},
+			{
+				"idx": 54,
+				"tag": "0054_webhooks",
+				"when": 1783278710830,
+				"sqlSha256": "cea829cdf9916c9874bbdf78017cb22cdfffe8a7d5f61f48eafc606916a62944",
+				"snapshotSha256": "ff46408f8794fae0a75691c22cc3201bc63e2a3f9e0897488dc37c104c49c71e"
+			},
+			{
+				"idx": 55,
+				"tag": "0055_add_gitlab_token",
+				"when": 1783321434784,
+				"sqlSha256": "b713fcbd5123af5d893c89dd5086e71f8a7bb3cb35abe14280470e700374db06",
+				"snapshotSha256": "e8cd14243793c49e1c12b73961fb46f6aaf0084fecccc4130f0c3e8a73af787f"
+			},
+			{
+				"idx": 56,
+				"tag": "0056_model_settings",
+				"when": 1783697856052,
+				"sqlSha256": "3a86d76460ff012c91bd1d18cc85f5b45036ae9cc6d84e8c76453bb9726944f0",
+				"snapshotSha256": "5eab938b35ac2f44307a0b69b5bbaa45a4d0042bcc7a5871f8dd2f4a78a10cb7"
+			},
+			{
+				"idx": 57,
+				"tag": "0057_map_settings_and_map_embed",
+				"when": 1785435191669,
+				"sqlSha256": "a29a01c940aae5105de6dfbce9c5f249a232d8d7e70dd3f3b32461d7eaf7700b",
+				"snapshotSha256": "d00ea0247199bc798ea5b1c65235ca6737c6e2f12bf9b42eca3ebf9653b1096c"
+			},
+			{
+				"idx": 58,
+				"tag": "0058_add_category_rootcause_fixtarget_to_recommendations",
+				"when": 1785931695088,
+				"sqlSha256": "338f8220d724751f437b6f5e94f32548841274111c69ef6cf6743ad954d42762",
+				"snapshotSha256": "c27128b469d274a2539a0954dd60b9d392c8b81740562aaef127ff82a2955bb8"
+			},
+			{
+				"idx": 59,
+				"tag": "0059_per_user_budget",
+				"when": 1786095010709,
+				"sqlSha256": "598c5f2edded49d73cec289d5d379bdba9ed858fb44d40f09255f74e1a863207",
+				"snapshotSha256": "df91b31c2e48e04db05e99e840af1740bc4d69ca7c7fbc650a0a7214bcd6eae2"
+			},
+			{
+				"idx": 60,
+				"tag": "0060_context_branch_ownership",
+				"when": 1786362985163,
+				"sqlSha256": "5be940c50985489c1424f1f0f6ad714658010029d3ccf3948fd65a12ad9ba06f",
+				"snapshotSha256": "c581663ef9cbb980af5a2860142267a364c382c385994f7352a7fcd7a4828d93"
+			},
+			{
+				"idx": 61,
+				"tag": "0061_context_branch_review_request",
+				"when": 1786371615253,
+				"sqlSha256": "567818f2a8fb58b143c33e084e9b225cce5db432fa491719eb8ee68dce34973d",
+				"snapshotSha256": "b6b16af2c3dc58ed3a5ae448086f13cd3803e8c9483f1dce9daf2f0d4b824bfc"
+			},
+			{
+				"idx": 62,
+				"tag": "0062_storage",
+				"when": 1786544584166,
+				"sqlSha256": "3484d54d82132be649bd17e607ab8b6be778b6b2570d4afae409e97d93b299b7",
+				"snapshotSha256": "7a7102df0075925c56ea4c292ab6949b091c68edbf91ac2f0a8cdf5bf87c8189"
+			},
+			{
+				"idx": 63,
+				"tag": "0063_default_models",
+				"when": 1786610518729,
+				"sqlSha256": "232274e78b16cacdede1c48e9a2eef0b6da6936dac5e507b23003a5ecf7266d7",
+				"snapshotSha256": "945882acbb622e445f42bdac1f1a2f6c2e1fa894d6f39e47df3b2429a32b6b1d"
+			},
+			{
+				"idx": 64,
+				"tag": "0064_context_assets",
+				"when": 1787598604903,
+				"sqlSha256": "164de5d0775300961a066bb2a33b5755f050e9f4776b4135d1a86ef238188fab",
+				"snapshotSha256": "5939efb6ffe18454f001438f6193adbe84fadb5bc7ed9f6a91e66940f0bd10cb"
+			},
+			{
+				"idx": 65,
+				"tag": "0065_irrifarm_identity",
+				"when": 1787867982278,
+				"sqlSha256": "3947a0fd950c937b498fe569e932446da2cf0ef368e06594c18ef1813fa8f0e6",
+				"snapshotSha256": "7bd021850c905b67d361eba5d4552e31b6faf5610e0fe5598488f42bb98f75c5"
+			},
+			{
+				"idx": 66,
+				"tag": "0066_add_mattermost",
+				"when": 1788763516469,
+				"sqlSha256": "612e8c73451d777208aa8c9cf3f14032644269d03c5cef14a8596739f61027c8",
+				"snapshotSha256": "9062a6f36fb5a6b534c361dd4f007873f97d734a66640304b99bff4d32f87c02"
+			}
+		]
+	}
+}

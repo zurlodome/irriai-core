@@ -53,7 +53,7 @@ If you ignore this document twice, or if you spam the tracker with agent-generat
 
 ## Getting Started
 
-### Node and npm versions
+### Node, npm and Bun versions
 
 The repo pins Node to the version in `.nvmrc` and npm to the exact version in the
 `packageManager` field of the root `package.json`. npm refuses to install with any
@@ -65,6 +65,8 @@ would rewrite the file and the diff would flip back and forth forever.
 nvm use
 npm run npm:pin
 ```
+
+Use Bun 1.4.4, matching `engines.bun`, CI and the Docker image (`npm install -g bun@1.4.4`).
 
 If you touched dependencies, normalise the lockfile before committing:
 
@@ -82,6 +84,15 @@ npm run dev
 
 This will start the project in development mode. It will start the frontend and backend in development mode.
 
+### Metabase migrations
+
+From a nao project directory, run `nao migrate metabase configure` to save the Metabase URL and API key
+under `metabase` in `nao_config.yaml`, then use the `nao migrate metabase` CLI commands to export dashboards,
+collections, or saved questions. Agents consume the exported manifests and use nao MCP to
+execute SQL and create charts or stories. Add `--allow-query-execution` when an item requires Metabase to
+compile its SQL; this executes the saved question in Metabase and should only be used when you trust it.
+Without the option, the manifest records the item as non-executable instead.
+
 ## Project Structure
 
 ```
@@ -96,7 +107,7 @@ chat/
 
 Some files in this repo are part of the commercial nao Enterprise Edition.
 They are clearly marked with `/* @license Enterprise */` at the top of the
-file and are subject to the commercial terms in [LICENSE](LICENSE) rather
+file and are subject to the commercial terms in [LICENSE-ENTERPRISE](LICENSE-ENTERPRISE) rather
 than Apache 2.0.
 
 Every EE feature is gated behind a signed `NAO_LICENSE` token (JWS / Ed25519),
@@ -120,6 +131,10 @@ PRs against EE-marked files just like the rest of the codebase.
 | `npm run -w @nao/frontend test` | Run frontend tests                   |
 
 ### Database Commands
+
+The PostgreSQL helpers use a separate `irriai-postgres-dev` Compose project, a dedicated data volume and port `5433`
+(`POSTGRES_DEV_PORT` overrides it). With the default credentials, use `DB_URI=postgres://nao:nao@localhost:5433/nao`
+for local development. `pg:stop` preserves the data; `pg:reset` removes this development volume.
 
 | Command                               | Description                         |
 | ------------------------------------- | ----------------------------------- |

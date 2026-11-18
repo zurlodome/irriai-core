@@ -6,6 +6,7 @@ allowing them to access data from various providers like Notion, databases, etc.
 Example template usage:
     {{ nao.notion.page('https://notion.so/...').content }}
     {{ nao.notion.page('abc123').title }}
+    {{ nao.obsidian.note('Projects/roadmap.md').content }}
     {{ nao.file.yaml('metadata.yaml').description }}
     {{ nao.file.text('README.md') }}
 """
@@ -22,6 +23,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import yaml
+
+from nao_core.config.obsidian import OBSIDIAN_OUTPUT_DIR
 
 if TYPE_CHECKING:
     from jinja2 import Environment
@@ -51,7 +54,7 @@ class FileProvider:
     def _validate_path(self, path: str) -> Path:
         """Validate and resolve a relative path against the project root."""
         p = Path(path)
-        if p.is_absolute():
+        if p.is_absolute() or p.anchor:
             raise ValueError(f"Absolute paths are not allowed: '{path}'. Use a relative path from the project root.")
 
         resolved = (self._project_path / p).resolve()
@@ -193,7 +196,9 @@ class FileProvider:
 
         root = self._resolved_root
         matches = sorted(
-            str(p.relative_to(root)) for p in root.glob(pattern) if p.is_file() and p.resolve().is_relative_to(root)
+            p.relative_to(root).as_posix()
+            for p in root.glob(pattern)
+            if p.is_file() and p.resolve().is_relative_to(root)
         )
         self._cache[cache_key] = matches
         return matches
@@ -316,6 +321,72 @@ class NotionProvider:
         return self._page_cache[page_url_or_id]
 
 
+@dataclass
+class ObsidianNote:
+    """Represents an Obsidian note from the synced local vault."""
+
+    relative_path: str
+    snapshot_root: Path
+    _data: dict[str, Any] | None = None
+
+    def _load(self) -> dict[str, Any]:
+        """Lazily load note data from the synced snapshot."""
+        if self._data is None:
+            note_path = (self.snapshot_root / self.relative_path).resolve()
+            if not note_path.is_relative_to(self.snapshot_root.resolve()):
+                raise ValueError(f"Path traversal is not allowed: '{self.relative_path}'")
+            if not note_path.exists():
+                raise FileNotFoundError(f"Obsidian note not found: '{self.relative_path}'")
+            if not note_path.is_file():
+                raise ValueError(f"Obsidian note path is not a file: '{self.relative_path}'")
+
+            content = note_path.read_text(encoding="utf-8")
+            frontmatter = FileProvider(self.snapshot_root).frontmatter(self.relative_path)
+            self._data = {
+                "path": self.relative_path,
+                "title": note_path.stem,
+                "content": content,
+                "frontmatter": frontmatter["meta"],
+            }
+        return self._data
+
+    @property
+    def path(self) -> str:
+        return self._load()["path"]
+
+    @property
+    def title(self) -> str:
+        return self._load()["title"]
+
+    @property
+    def content(self) -> str:
+        return self._load()["content"]
+
+    @property
+    def frontmatter(self) -> dict[str, Any]:
+        return self._load()["frontmatter"]
+
+    def __str__(self) -> str:
+        return self.content
+
+
+class ObsidianProvider:
+    """Provider interface for accessing synced Obsidian notes in templates."""
+
+    def __init__(self, project_path: Path):
+        self._snapshot_root = project_path / OBSIDIAN_OUTPUT_DIR
+        self._note_cache: dict[str, ObsidianNote] = {}
+
+    def note(self, relative_path: str) -> ObsidianNote:
+        """Get a synced Obsidian note by path relative to the vault root."""
+        if relative_path not in self._note_cache:
+            self._note_cache[relative_path] = ObsidianNote(
+                relative_path=relative_path,
+                snapshot_root=self._snapshot_root,
+            )
+        return self._note_cache[relative_path]
+
+
 class NaoContext:
     """The main context object exposed as `nao` in user templates.
 
@@ -325,6 +396,7 @@ class NaoContext:
 
     Example template usage:
         {{ nao.notion.page('url').content }}
+        {{ nao.obsidian.note('Projects/roadmap.md').content }}
         {{ nao.config.project_name }}
     """
 
@@ -356,6 +428,22 @@ class NaoContext:
             {{ nao.notion.page('https://notion.so/...').content }}
         """
         return NotionProvider(self._config)
+
+    @cached_property
+    def obsidian(self) -> ObsidianProvider:
+        """Access synced Obsidian notes.
+
+        Example:
+            {{ nao.obsidian.note('Projects/roadmap.md').content }}
+        """
+        project_path = self._project_path
+        if project_path is None:
+            raise RuntimeError(
+                "Obsidian note reading requires a project path. "
+                "This context was created without a project_path — "
+                "ensure nao sync is run from a valid nao project directory."
+            )
+        return ObsidianProvider(project_path)
 
     @property
     def config(self) -> NaoConfig:

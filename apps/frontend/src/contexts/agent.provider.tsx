@@ -2,7 +2,7 @@ import { createContext, useContext, useLayoutEffect, useMemo, useState } from 'r
 import { useSyncExternalStoreWithSelector } from 'use-sync-external-store/shim/with-selector';
 import type { UIMessage } from '@nao/backend/chat';
 
-import type { AgentHelpers } from '@/hooks/use-agent';
+import type { AgentHelpers, AgentMode, AgentRequestBodyGetter } from '@/hooks/use-agent';
 import { useAgent, useSyncMessages } from '@/hooks/use-agent';
 import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts';
 import { useStreamEndSound } from '@/hooks/use-stream-end-sound';
@@ -38,14 +38,17 @@ export const useAgentMessagesSelector = <Selection,>(
 export interface Props {
 	children: React.ReactNode;
 	disableNavigation?: boolean;
+	mode?: AgentMode;
+	getRequestBody?: AgentRequestBodyGetter;
 }
 
-export const AgentProvider = ({ children, disableNavigation }: Props) => {
-	const agent = useAgent({ disableNavigation });
+export const AgentProvider = ({ children, disableNavigation, mode = 'default', getRequestBody }: Props) => {
+	const agent = useAgent({ disableNavigation, mode, getRequestBody });
 	const [messagesStore] = useState(() => createAgentMessagesStore(agent.messages));
 	const value = useMemo<AgentHelpers>(
 		() => ({
 			chatId: agent.chatId,
+			mode: agent.mode,
 			setMessages: agent.setMessages,
 			queueOrSendMessage: agent.queueOrSendMessage,
 			editMessage: agent.editMessage,
@@ -59,6 +62,7 @@ export const AgentProvider = ({ children, disableNavigation }: Props) => {
 			error: agent.error,
 			clearError: agent.clearError,
 			selectedModel: agent.selectedModel,
+			usesDefaultModel: agent.usesDefaultModel,
 			setSelectedModel: agent.setSelectedModel,
 			setMentions: agent.setMentions,
 			adminMode: agent.adminMode,
@@ -66,6 +70,7 @@ export const AgentProvider = ({ children, disableNavigation }: Props) => {
 		}),
 		[
 			agent.chatId,
+			agent.mode,
 			agent.setMessages,
 			agent.queueOrSendMessage,
 			agent.editMessage,
@@ -79,6 +84,7 @@ export const AgentProvider = ({ children, disableNavigation }: Props) => {
 			agent.error,
 			agent.clearError,
 			agent.selectedModel,
+			agent.usesDefaultModel,
 			agent.setSelectedModel,
 			agent.setMentions,
 			agent.adminMode,
@@ -121,6 +127,7 @@ export const ReadonlyAgentMessagesProvider = ({
 	const value = useMemo<AgentHelpers>(
 		() => ({
 			chatId,
+			mode: 'default',
 			setMessages: noop,
 			queueOrSendMessage: noopPromise,
 			editMessage: noopPromise,
@@ -134,6 +141,7 @@ export const ReadonlyAgentMessagesProvider = ({
 			error: undefined,
 			clearError: noop,
 			selectedModel: null,
+			usesDefaultModel: true,
 			setSelectedModel: noop,
 			setMentions: noop,
 			adminMode: false,

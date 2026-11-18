@@ -1,13 +1,13 @@
-import fs from 'fs/promises';
 import path from 'path';
 import { z } from 'zod/v4';
 
+import { readProjectFileBytes } from '../agents/tools/read';
 import type { App } from '../app';
 import { authMiddleware } from '../middleware/auth';
 import * as chatQueries from '../queries/chat.queries';
 import * as projectQueries from '../queries/project.queries';
+import { buildToolContext } from '../services/agent';
 import { HandlerError } from '../utils/error';
-import { toRealPath } from '../utils/tools';
 
 const pdfQuerySchema = z.object({
 	chatId: z.string().uuid(),
@@ -48,17 +48,12 @@ export const contextFileRoutes = async (app: App) => {
 			throw new HandlerError('BAD_REQUEST', 'Only PDF files can be viewed');
 		}
 
-		const realPath = toRealPath(virtualPath, project.path);
-		const stat = await fs.stat(realPath);
-		if (!stat.isFile()) {
-			throw new HandlerError('NOT_FOUND', 'PDF file not found');
-		}
-
-		const buffer = await fs.readFile(realPath);
+		const context = await buildToolContext({ projectId: chat.projectId, userId: request.user.id, chatId });
+		const { realPath, bytes: buffer } = await readProjectFileBytes(virtualPath, context);
 		return reply
 			.header('Content-Type', 'application/pdf')
 			.header('Content-Disposition', `inline; filename="${path.basename(realPath).replaceAll('"', '')}"`)
-			.header('Cache-Control', 'private, max-age=300')
+			.header('Cache-Control', 'private, no-store')
 			.send(buffer);
 	});
 
@@ -85,20 +80,17 @@ export const contextFileRoutes = async (app: App) => {
 			throw new HandlerError('BAD_REQUEST', 'Only image files can be viewed');
 		}
 
-		const realPath = toRealPath(virtualPath, project.path);
-		const stat = await fs.stat(realPath);
-		if (!stat.isFile()) {
-			throw new HandlerError('NOT_FOUND', 'Image file not found');
-		}
-		if (stat.size > MAX_CONTEXT_IMAGE_BYTES) {
+		const context = await buildToolContext({ projectId: chat.projectId, userId: request.user.id, chatId });
+		const { realPath, bytes: buffer } = await readProjectFileBytes(virtualPath, context);
+		if (buffer.length > MAX_CONTEXT_IMAGE_BYTES) {
 			throw new HandlerError('BAD_REQUEST', 'Image file is too large');
 		}
 
-		const buffer = await fs.readFile(realPath);
 		return reply
 			.header('Content-Type', mediaType)
 			.header('Content-Disposition', `inline; filename="${path.basename(realPath).replaceAll('"', '')}"`)
-			.header('Cache-Control', 'private, max-age=300')
+			.header('Cache-Control', 'private, no-store')
+			.header('Content-Security-Policy', "default-src 'none'; sandbox")
 			.send(buffer);
 	});
 };

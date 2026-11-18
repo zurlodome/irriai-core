@@ -2,11 +2,12 @@
 
 import json
 from pathlib import Path
+from unittest.mock import MagicMock, patch
 
 import pytest
 import yaml
 
-from nao_core.templates.context import FileProvider
+from nao_core.templates.context import FileProvider, NaoContext
 
 
 @pytest.fixture()
@@ -161,20 +162,13 @@ class TestPermissionError:
     def test_permission_denied(self, provider: FileProvider, project_dir: Path):
         restricted = project_dir / "secret.txt"
         restricted.write_text("secret")
-        restricted.chmod(0o000)
-        try:
+        with patch.object(Path, "read_text", side_effect=PermissionError("denied")):
             with pytest.raises(PermissionError, match="Permission denied"):
                 provider.text("secret.txt")
-        finally:
-            restricted.chmod(0o644)
 
 
 class TestNoProjectPath:
     def test_nao_context_file_without_project_path(self):
-        from unittest.mock import MagicMock
-
-        from nao_core.templates.context import NaoContext
-
         config = MagicMock()
         ctx = NaoContext(config, project_path=None)
         with pytest.raises(RuntimeError, match="File reading requires a project path"):

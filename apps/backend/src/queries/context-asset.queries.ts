@@ -19,9 +19,24 @@ export const saveContextAsset = async (asset: NewContextAsset): Promise<{ id: st
 	return row;
 };
 
-export const getContextAssetById = async (id: string): Promise<{ data: string; mediaType: string } | undefined> => {
+export const getContextAssetById = async (
+	id: string,
+): Promise<
+	| {
+			data: string;
+			mediaType: string;
+			projectId: string;
+			virtualPath: string;
+	  }
+	| undefined
+> => {
 	const [row] = await db
-		.select({ data: s.contextAsset.data, mediaType: s.contextAsset.mediaType })
+		.select({
+			data: s.contextAsset.data,
+			mediaType: s.contextAsset.mediaType,
+			projectId: s.contextAsset.projectId,
+			virtualPath: s.contextAsset.virtualPath,
+		})
 		.from(s.contextAsset)
 		.where(eq(s.contextAsset.id, id))
 		.execute();

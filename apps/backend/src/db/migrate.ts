@@ -4,11 +4,10 @@ import { migrate as migrateBunSqlite } from 'drizzle-orm/bun-sqlite/migrator';
 import { drizzle as drizzlePostgres } from 'drizzle-orm/postgres-js';
 import { migrate as migratePostgres } from 'drizzle-orm/postgres-js/migrator';
 import postgres from 'postgres';
-import path from 'path';
-import { fileURLToPath } from 'url';
 
 import { env } from '../env';
 import { Dialect } from './dbConfig';
+import { resolveMigrationsPath } from './migration-path';
 
 interface MigrationOptions {
 	dbType: Dialect;
@@ -16,13 +15,13 @@ interface MigrationOptions {
 	migrationsPath: string;
 }
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
 export async function runMigrations(options: MigrationOptions): Promise<void> {
 	const { dbType, connectionString, migrationsPath } = options;
-	const resolvedMigrationsPath = path.isAbsolute(migrationsPath)
-		? migrationsPath
-		: path.resolve(__dirname, '..', '..', migrationsPath);
+	const resolvedMigrationsPath = resolveMigrationsPath(migrationsPath, {
+		moduleUrl: import.meta.url,
+		executablePath: process.execPath,
+		compiled: typeof Bun !== 'undefined' && /(\$bunfs|~BUN)/.test(Bun.main),
+	});
 
 	console.log(`🗃️  Database type: ${dbType}`);
 	console.log(`📁 Migrations folder: ${resolvedMigrationsPath}`);

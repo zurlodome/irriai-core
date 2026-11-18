@@ -1,3 +1,5 @@
+import sqlite3
+
 import pytest
 
 from irrifarm_scope import (
@@ -10,6 +12,46 @@ from irrifarm_scope import (
 POLICY = {"motherboards": "MBO_SN", "senshistory": "MBO_SN"}
 
 
+def test_two_users_and_revoked_scope_do_not_share_warehouse_rows():
+    """Exercise rewritten SQL on real rows, not only its rendered text."""
+    with sqlite3.connect(":memory:") as connection:
+        connection.execute("CREATE TABLE motherboards (MBO_SN TEXT, MBO_Alias TEXT)")
+        connection.executemany(
+            "INSERT INTO motherboards VALUES (?, ?)",
+            [("SN001", "Alice"), ("SN002", "Bob"), ("SN003", "Other")],
+        )
+        sql = "SELECT MBO_SN FROM motherboards ORDER BY MBO_SN"
+        for serials, expected in [
+            (["SN001"], [("SN001",)]),
+            (["SN002"], [("SN002",)]),
+            ([], []),
+            (["SN001"], [("SN001",)]),
+        ]:
+            scoped = apply_irrifarm_scope(sql, serials, "sqlite", POLICY)
+            assert connection.execute(scoped).fetchall() == expected
+
+
+def test_join_and_cte_cannot_reintroduce_an_unauthorized_motherboard():
+    with sqlite3.connect(":memory:") as connection:
+        connection.execute("CREATE TABLE motherboards (MBO_SN TEXT)")
+        connection.execute("CREATE TABLE senshistory (MBO_SN TEXT, reading INTEGER)")
+        connection.executemany("INSERT INTO motherboards VALUES (?)", [("SN001",), ("SN002",)])
+        connection.executemany("INSERT INTO senshistory VALUES (?, ?)", [("SN001", 10), ("SN002", 20)])
+        scoped = apply_irrifarm_scope(
+            """
+            WITH readings AS (SELECT MBO_SN, reading FROM senshistory)
+            SELECT m.MBO_SN, r.reading
+            FROM motherboards m
+            JOIN readings r ON r.MBO_SN = m.MBO_SN
+            ORDER BY m.MBO_SN
+            """,
+            ["SN001"],
+            "sqlite",
+            POLICY,
+        )
+        assert connection.execute(scoped).fetchall() == [("SN001", 10)]
+
+
 def test_scopes_a_table_and_preserves_its_alias():
     sql = apply_irrifarm_scope(
         "SELECT m.MBO_SN, m.MBO_Alias FROM motherboards m",
@@ -18,10 +60,7 @@ def test_scopes_a_table_and_preserves_its_alias():
         POLICY,
     )
 
-    assert (
-        "FROM (SELECT * FROM motherboards WHERE MBO_SN IN ('SN001', 'SN002')) AS m"
-        in sql
-    )
+    assert "FROM (SELECT * FROM motherboards WHERE MBO_SN IN ('SN001', 'SN002')) AS m" in sql
 
 
 def test_scopes_every_table_in_a_join():
@@ -47,9 +86,7 @@ def test_rejects_an_unclassified_table():
 
 
 def test_allows_an_explicit_global_table():
-    sql = apply_irrifarm_scope(
-        "SELECT * FROM products", ["SN001"], "mysql", POLICY, {"products"}
-    )
+    sql = apply_irrifarm_scope("SELECT * FROM products", ["SN001"], "mysql", POLICY, {"products"})
 
     assert sql == "SELECT * FROM products"
 
@@ -87,9 +124,7 @@ def test_query_guardrails_clamp_large_limit_and_preserve_small_limit():
 
 
 def test_query_guardrails_do_not_add_mysql_hint_to_other_dialects():
-    guarded, applied_limit = apply_irrifarm_query_guardrails(
-        "SELECT * FROM motherboards", "postgresql", 100, 30_000
-    )
+    guarded, applied_limit = apply_irrifarm_query_guardrails("SELECT * FROM motherboards", "postgresql", 100, 30_000)
 
     assert "MAX_EXECUTION_TIME" not in guarded
     assert guarded.endswith("LIMIT 100")

@@ -4,6 +4,7 @@ import { SQLiteTable } from 'drizzle-orm/sqlite-core';
 import fs from 'fs';
 import path from 'path';
 
+import { checkMigrationIntegrity } from '../src/db/migration-integrity';
 import * as pgSchema from '../src/db/pg-schema';
 import * as sqliteSchema from '../src/db/sqlite-schema';
 
@@ -16,6 +17,16 @@ const sqliteMetaDir = path.join(sqliteMigrationsDir, 'meta');
  * Ensures the migrations and schemas from both the sqlite and postgres databases are in sync through migration folders, meta files, and table schema comparisons.
  */
 const success = runTests([
+	[
+		() => {
+			const issues = [
+				...checkMigrationIntegrity(pgMigrationsDir).map((issue) => `Postgres: ${issue}`),
+				...checkMigrationIntegrity(sqliteMigrationsDir).map((issue) => `SQLite: ${issue}`),
+			];
+			return issues.length === 0 ? true : issues.join('\n\t');
+		},
+		(error) => `Migration history is inconsistent.\n\t${error}`,
+	],
 	[
 		// Check migrations/ directory
 		() => checkDirectoriesHaveSameEntries(pgMigrationsDir, sqliteMigrationsDir),
@@ -200,6 +211,8 @@ function normalizeColumnType(columnType: string): string {
 	const equivalentTypes: Record<string, string> = {
 		Jsonb: 'Json',
 		TextJson: 'Json',
+		BigInt53: 'Integer',
+		DoublePrecision: 'Real',
 	};
 
 	return equivalentTypes[stripped] ?? stripped;

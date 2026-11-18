@@ -26,6 +26,7 @@ export async function resolveMarkdownImageAssets(options: {
 	projectId: string;
 	projectFolder: string;
 	sourceFilePath: string;
+	readAssetBytes?: (virtualPath: string) => Promise<{ bytes: Buffer; virtualPath: string }>;
 }): Promise<string> {
 	return resolveTextImageAssets(options);
 }
@@ -35,6 +36,7 @@ export async function resolveTextImageAssets(options: {
 	projectId: string;
 	projectFolder: string;
 	sourceFilePath: string;
+	readAssetBytes?: (virtualPath: string) => Promise<{ bytes: Buffer; virtualPath: string }>;
 }): Promise<string> {
 	const resolveUrl = async (rawDestination: string) => {
 		const asset = await resolveLocalImageAsset({
@@ -42,6 +44,7 @@ export async function resolveTextImageAssets(options: {
 			projectId: options.projectId,
 			projectFolder: options.projectFolder,
 			sourceFilePath: options.sourceFilePath,
+			readAssetBytes: options.readAssetBytes,
 		});
 		return asset ? `${CONTEXT_ASSET_URL_PREFIX}/${asset.id}` : null;
 	};
@@ -115,6 +118,7 @@ async function resolveLocalImageAsset(options: {
 	projectId: string;
 	projectFolder: string;
 	sourceFilePath: string;
+	readAssetBytes?: (virtualPath: string) => Promise<{ bytes: Buffer; virtualPath: string }>;
 }): Promise<{ id: string } | null> {
 	const localPath = normalizeLocalMarkdownPath(options.rawDestination);
 	if (!localPath) {
@@ -126,19 +130,38 @@ async function resolveLocalImageAsset(options: {
 		return null;
 	}
 
-	const resolvedAsset = await resolveAssetPath(localPath, options.sourceFilePath, options.projectFolder);
-	if (!resolvedAsset) {
-		return null;
+	let buffer: Buffer;
+	let assetVirtualPath: string;
+	if (options.readAssetBytes) {
+		const candidates = [
+			...new Set([
+				resolveAssetVirtualPath(localPath, options.sourceFilePath),
+				path.posix.normalize(`/${localPath}`),
+			]),
+		];
+		let asset: { bytes: Buffer; virtualPath: string } | undefined;
+		for (const candidate of candidates) {
+			try {
+				asset = await options.readAssetBytes(candidate);
+				break;
+			} catch {
+				/* Try the project-root spelling next. */
+			}
+		}
+		if (!asset || asset.bytes.length > MAX_CONTEXT_ASSET_BYTES) {
+			return null;
+		}
+		buffer = asset.bytes;
+		assetVirtualPath = asset.virtualPath;
+	} else {
+		const resolvedAsset = await resolveAssetPath(localPath, options.sourceFilePath, options.projectFolder);
+		if (!resolvedAsset || !resolvedAsset.stat.isFile() || resolvedAsset.stat.size > MAX_CONTEXT_ASSET_BYTES) {
+			return null;
+		}
+		buffer = await fs.readFile(resolvedAsset.realPath);
+		assetVirtualPath = toVirtualPath(resolvedAsset.realPath, options.projectFolder);
 	}
-
-	const { realPath, stat } = resolvedAsset;
-	if (!stat.isFile() || stat.size > MAX_CONTEXT_ASSET_BYTES) {
-		return null;
-	}
-
-	const buffer = await fs.readFile(realPath);
 	const contentHash = createHash('sha256').update(buffer).digest('hex');
-	const assetVirtualPath = toVirtualPath(realPath, options.projectFolder);
 
 	const { saveContextAsset } = await import('../queries/context-asset.queries');
 	return saveContextAsset({

@@ -15,16 +15,11 @@ def load_scope_policy() -> tuple[dict[str, str], set[str]]:
     try:
         parsed = json.loads(raw_columns)
     except json.JSONDecodeError as error:
-        raise IrrifarmScopeError(
-            "IRRIFARM_MBO_SCOPE_COLUMNS must be a JSON object"
-        ) from error
+        raise IrrifarmScopeError("IRRIFARM_MBO_SCOPE_COLUMNS must be a JSON object") from error
     if not isinstance(parsed, dict) or not all(
-        isinstance(table, str) and isinstance(column, str)
-        for table, column in parsed.items()
+        isinstance(table, str) and isinstance(column, str) for table, column in parsed.items()
     ):
-        raise IrrifarmScopeError(
-            "IRRIFARM_MBO_SCOPE_COLUMNS must map table names to column names"
-        )
+        raise IrrifarmScopeError("IRRIFARM_MBO_SCOPE_COLUMNS must map table names to column names")
 
     columns = {table.lower(): column for table, column in parsed.items()}
     unscoped = {
@@ -42,11 +37,7 @@ def apply_irrifarm_scope(
     scope_columns: dict[str, str] | None = None,
     unscoped_tables: set[str] | None = None,
 ) -> str:
-    columns, unscoped = (
-        (scope_columns, unscoped_tables or set())
-        if scope_columns is not None
-        else load_scope_policy()
-    )
+    columns, unscoped = (scope_columns, unscoped_tables or set()) if scope_columns is not None else load_scope_policy()
     if not columns:
         raise IrrifarmScopeError("No Irrifarm MBO scope policy is configured")
 
@@ -60,16 +51,8 @@ def apply_irrifarm_scope(
     if not isinstance(statement, (exp.Select, exp.Union)):
         raise IrrifarmScopeError("Only SELECT queries are allowed for Irrifarm users")
 
-    cte_names = {
-        cte.alias_or_name.lower()
-        for cte in statement.find_all(exp.CTE)
-        if cte.alias_or_name
-    }
-    physical_tables = [
-        table
-        for table in list(statement.find_all(exp.Table))
-        if table.name.lower() not in cte_names
-    ]
+    cte_names = {cte.alias_or_name.lower() for cte in statement.find_all(exp.CTE) if cte.alias_or_name}
+    physical_tables = [table for table in list(statement.find_all(exp.Table)) if table.name.lower() not in cte_names]
     if not physical_tables:
         raise IrrifarmScopeError("The query does not reference a scoped table")
 
@@ -79,9 +62,7 @@ def apply_irrifarm_scope(
         if column is None:
             if table_name in unscoped:
                 continue
-            raise IrrifarmScopeError(
-                f"Table '{table.name}' has no Irrifarm MBO scope rule"
-            )
+            raise IrrifarmScopeError(f"Table '{table.name}' has no Irrifarm MBO scope rule")
         _replace_with_scoped_subquery(table, column, safe_serials)
 
     return statement.sql(dialect=sqlglot_dialect)
@@ -121,20 +102,13 @@ def apply_irrifarm_query_guardrails(
 
 
 def _validate_senshistory_period(statement: exp.Select | exp.Union) -> None:
-    if not any(
-        table.name.lower() == "senshistory" for table in statement.find_all(exp.Table)
-    ):
+    if not any(table.name.lower() == "senshistory" for table in statement.find_all(exp.Table)):
         return
 
     time_column = "sns_dtevent"
     for disjunction in statement.find_all(exp.Or):
-        if any(
-            column.name.lower() == time_column
-            for column in disjunction.find_all(exp.Column)
-        ):
-            raise IrrifarmScopeError(
-                "senshistory time bounds must be combined with AND"
-            )
+        if any(column.name.lower() == time_column for column in disjunction.find_all(exp.Column)):
+            raise IrrifarmScopeError("senshistory time bounds must be combined with AND")
 
     lower_bounds: list[date] = []
     upper_bounds: list[date] = []
@@ -173,22 +147,16 @@ def _validate_senshistory_period(statement: exp.Select | exp.Union) -> None:
                 upper_bounds.append(bound)
 
     if not has_lower_bound or not has_upper_bound:
-        raise IrrifarmScopeError(
-            "senshistory queries require both lower and upper SNS_DtEvent bounds"
-        )
+        raise IrrifarmScopeError("senshistory queries require both lower and upper SNS_DtEvent bounds")
 
     if not lower_bounds or not upper_bounds:
-        raise IrrifarmScopeError(
-            "senshistory time bounds must use fixed dates or CURRENT_DATE day intervals"
-        )
+        raise IrrifarmScopeError("senshistory time bounds must use fixed dates or CURRENT_DATE day intervals")
 
     period_start = max(lower_bounds)
     period_end = min(upper_bounds)
     period = period_end - period_start
     if period > timedelta(days=366):
-        raise IrrifarmScopeError(
-            "senshistory queries cannot span more than 366 days; narrow the period"
-        )
+        raise IrrifarmScopeError("senshistory queries cannot span more than 366 days; narrow the period")
     if _returns_raw_rows(statement) and period > timedelta(days=7):
         raise IrrifarmScopeError(
             "raw senshistory queries cannot span more than 7 days; aggregate the data or narrow the period"
@@ -196,9 +164,7 @@ def _validate_senshistory_period(statement: exp.Select | exp.Union) -> None:
 
 
 def _is_time_column(expression: exp.Expression | None) -> bool:
-    return (
-        isinstance(expression, exp.Column) and expression.name.lower() == "sns_dtevent"
-    )
+    return isinstance(expression, exp.Column) and expression.name.lower() == "sns_dtevent"
 
 
 def _static_date(expression: exp.Expression | None) -> date | None:
@@ -227,9 +193,7 @@ def _static_date(expression: exp.Expression | None) -> date | None:
     return None
 
 
-def _day_delta(
-    amount: exp.Expression | None, unit: exp.Expression | None
-) -> timedelta | None:
+def _day_delta(amount: exp.Expression | None, unit: exp.Expression | None) -> timedelta | None:
     if not isinstance(unit, exp.Var) or unit.name.upper() != "DAY":
         return None
     if not isinstance(amount, exp.Literal):
@@ -243,15 +207,10 @@ def _day_delta(
 def _returns_raw_rows(statement: exp.Select | exp.Union) -> bool:
     if next(statement.find_all(exp.Group), None) is not None:
         return False
-    return not any(
-        aggregate.find_ancestor(exp.Window) is None
-        for aggregate in statement.find_all(exp.AggFunc)
-    )
+    return not any(aggregate.find_ancestor(exp.Window) is None for aggregate in statement.find_all(exp.AggFunc))
 
 
-def _replace_with_scoped_subquery(
-    table: exp.Table, column: str, serials: list[str]
-) -> None:
+def _replace_with_scoped_subquery(table: exp.Table, column: str, serials: list[str]) -> None:
     alias = table.alias_or_name
     source = table.copy()
     source.set("alias", None)
@@ -290,9 +249,7 @@ def _validate_serials(values: list[str]) -> list[str]:
 
 def _literal_row_limit(statement: exp.Select | exp.Union) -> int | None:
     limit = statement.args.get("limit")
-    if not isinstance(limit, exp.Limit) or not isinstance(
-        limit.expression, exp.Literal
-    ):
+    if not isinstance(limit, exp.Limit) or not isinstance(limit.expression, exp.Literal):
         return None
     if limit.expression.is_string:
         return None
@@ -303,9 +260,7 @@ def _literal_row_limit(statement: exp.Select | exp.Union) -> int | None:
     return value if value > 0 else None
 
 
-def _set_mysql_execution_timeout(
-    statement: exp.Select | exp.Union, timeout_ms: int
-) -> None:
+def _set_mysql_execution_timeout(statement: exp.Select | exp.Union, timeout_ms: int) -> None:
     target = statement if isinstance(statement, exp.Select) else statement.this
     if not isinstance(target, exp.Select):
         return
@@ -315,10 +270,7 @@ def _set_mysql_execution_timeout(
         [
             expression
             for expression in existing_hint.expressions
-            if not (
-                isinstance(expression, exp.Anonymous)
-                and expression.name.upper() == "MAX_EXECUTION_TIME"
-            )
+            if not (isinstance(expression, exp.Anonymous) and expression.name.upper() == "MAX_EXECUTION_TIME")
         ]
         if isinstance(existing_hint, exp.Hint)
         else []

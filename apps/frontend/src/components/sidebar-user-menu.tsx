@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router';
-import { ArrowLeft, SlidersVertical } from 'lucide-react';
+import { SlidersVertical } from 'lucide-react';
 import { Avatar } from './ui/avatar';
 import { useSession } from '@/lib/auth-client';
 import { getAccountDisplayLabel } from '@/lib/irrifarm-user';
@@ -14,6 +14,10 @@ export function SidebarUserMenu({ isCollapsed, isInSettings }: SidebarUserMenuPr
 	const { data: session } = useSession();
 	const username = session?.user?.name;
 	const accountLabel = getAccountDisplayLabel(session?.user?.email);
+
+	if (isInSettings && isCollapsed) {
+		return null;
+	}
 
 	return (
 		<div className='flex flex-col gap-3'>
@@ -43,20 +47,16 @@ export function SidebarUserMenu({ isCollapsed, isInSettings }: SidebarUserMenuPr
 						</span>
 					</div>
 				</Link>
-				<div className={cn('flex items-center gap-2', isCollapsed ? 'p-2' : 'p-0.5')}>
-					{!isInSettings ? (
+				{!isInSettings && (
+					<div className={cn('flex items-center gap-2', isCollapsed ? 'p-2' : 'p-0.5')}>
 						<Link
 							to='/settings'
 							className='text-muted-foreground group-hover/user:text-foreground hover:text-foreground'
 						>
 							<SlidersVertical className='size-4' />
 						</Link>
-					) : (
-						<Link to='/' className='text-muted-foreground hover:text-foreground'>
-							<ArrowLeft className='size-4' />
-						</Link>
-					)}
-				</div>
+					</div>
+				)}
 			</div>
 		</div>
 	);
